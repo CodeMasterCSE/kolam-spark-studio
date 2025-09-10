@@ -2,95 +2,130 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Kolam Generator Design System - Traditional Indian Art Colors */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Traditional Indian Color Palette */
+    --background: 32 28% 96%;  /* Warm cream */
+    --foreground: 20 14% 18%;  /* Deep brown */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 32 28% 98%;
+    --card-foreground: 20 14% 18%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 32 28% 98%;
+    --popover-foreground: 20 14% 18%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Traditional Maroon/Crimson Primary */
+    --primary: 348 83% 35%;  /* Deep maroon */
+    --primary-foreground: 32 28% 96%;
+    --primary-glow: 348 75% 45%;  /* Lighter maroon */
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Golden Secondary */
+    --secondary: 45 85% 55%;  /* Traditional gold */
+    --secondary-foreground: 20 14% 18%;
+    --secondary-glow: 45 90% 65%;  /* Bright gold */
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 32 20% 92%;
+    --muted-foreground: 20 10% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Accent - Saffron/Orange */
+    --accent: 25 95% 55%;  /* Saffron */
+    --accent-foreground: 32 28% 96%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 32 28% 96%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 32 15% 88%;
+    --input: 32 15% 88%;
+    --ring: 348 83% 35%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
+    /* Custom Kolam Colors */
+    --kolam-canvas: 32 50% 98%;  /* Canvas cream */
+    --kolam-dots: 20 25% 25%;    /* Dot color */
+    --kolam-lines: 348 70% 40%;   /* Line color */
+    --kolam-accent: 45 85% 50%;   /* Gold accents */
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    /* Cultural Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)), hsl(var(--secondary)));
+    --gradient-warm: linear-gradient(180deg, hsl(var(--background)), hsl(32 20% 94%));
+    --gradient-canvas: linear-gradient(145deg, hsl(var(--kolam-canvas)), hsl(32 40% 96%));
+    --gradient-gold: linear-gradient(135deg, hsl(var(--secondary)), hsl(var(--secondary-glow)));
 
-    --sidebar-primary: 240 5.9% 10%;
+    /* Cultural Shadows */
+    --shadow-warm: 0 4px 20px hsl(var(--primary) / 0.15);
+    --shadow-canvas: 0 8px 32px hsl(var(--primary) / 0.12);
+    --shadow-glow: 0 0 30px hsl(var(--secondary) / 0.3);
 
-    --sidebar-primary-foreground: 0 0% 98%;
+    /* Smooth Transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 32 28% 96%;
+    --sidebar-foreground: 20 14% 18%;
+    --sidebar-primary: 348 83% 35%;
+    --sidebar-primary-foreground: 32 28% 96%;
+    --sidebar-accent: 32 20% 92%;
+    --sidebar-accent-foreground: 20 14% 18%;
+    --sidebar-border: 32 15% 88%;
+    --sidebar-ring: 348 83% 35%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 20 20% 8%;   /* Deep brown-black */
+    --foreground: 32 28% 96%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 20 18% 10%;
+    --card-foreground: 32 28% 96%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 20 18% 10%;
+    --popover-foreground: 32 28% 96%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 348 75% 55%;  /* Brighter maroon for dark mode */
+    --primary-foreground: 20 20% 8%;
+    --primary-glow: 348 70% 65%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 45 80% 60%;  /* Brighter gold */
+    --secondary-foreground: 20 20% 8%;
+    --secondary-glow: 45 85% 70%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 20 15% 15%;
+    --muted-foreground: 32 20% 65%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 25 85% 60%;
+    --accent-foreground: 20 20% 8%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 32 28% 96%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --border: 20 15% 18%;
+    --input: 20 15% 18%;
+    --ring: 348 75% 55%;
+
+    --kolam-canvas: 20 15% 12%;
+    --kolam-dots: 32 25% 75%;
+    --kolam-lines: 348 65% 55%;
+    --kolam-accent: 45 80% 60%;
+
+    --gradient-hero: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)), hsl(var(--secondary)));
+    --gradient-warm: linear-gradient(180deg, hsl(var(--background)), hsl(20 18% 10%));
+    --gradient-canvas: linear-gradient(145deg, hsl(var(--kolam-canvas)), hsl(20 12% 14%));
+    --gradient-gold: linear-gradient(135deg, hsl(var(--secondary)), hsl(var(--secondary-glow)));
+
+    --shadow-warm: 0 4px 20px hsl(0 0% 0% / 0.4);
+    --shadow-canvas: 0 8px 32px hsl(0 0% 0% / 0.3);
+    --shadow-glow: 0 0 30px hsl(var(--secondary) / 0.4);
+
+    --sidebar-background: 20 18% 10%;
+    --sidebar-foreground: 32 28% 96%;
+    --sidebar-primary: 348 75% 55%;
+    --sidebar-primary-foreground: 20 20% 8%;
+    --sidebar-accent: 20 15% 15%;
+    --sidebar-accent-foreground: 32 28% 96%;
+    --sidebar-border: 20 15% 18%;
+    --sidebar-ring: 348 75% 55%;
   }
 }
 
@@ -100,6 +135,75 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Cultural Typography */
+  .heading-traditional {
+    @apply text-4xl md:text-6xl font-bold bg-gradient-to-r from-primary via-primary-glow to-secondary bg-clip-text text-transparent;
+    text-shadow: 2px 2px 4px hsl(var(--primary) / 0.1);
+  }
+
+  .text-cultural {
+    @apply text-lg md:text-xl text-muted-foreground leading-relaxed;
+  }
+}
+
+@layer components {
+  /* Hero Animations */
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+
+  .animate-draw {
+    animation: draw 2s ease-in-out forwards;
+  }
+
+  /* Interactive Elements */
+  .interactive-hover {
+    @apply transition-all duration-300 hover:scale-105 hover:shadow-warm;
+  }
+
+  .kolam-canvas {
+    background: var(--gradient-canvas);
+    box-shadow: var(--shadow-canvas);
+    @apply rounded-xl border-2 border-border/50;
+  }
+
+  /* Button Variants */
+  .btn-hero {
+    background: var(--gradient-hero);
+    @apply text-white font-semibold px-8 py-4 rounded-xl shadow-warm hover:shadow-glow transition-all duration-300 hover:scale-105;
+  }
+
+  .btn-cultural {
+    background: var(--gradient-gold);
+    @apply text-primary font-medium px-6 py-3 rounded-lg shadow-sm hover:shadow-warm transition-all duration-300;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes glow {
+  from { box-shadow: 0 0 20px hsl(var(--secondary) / 0.3); }
+  to { box-shadow: 0 0 40px hsl(var(--secondary) / 0.6); }
+}
+
+@keyframes draw {
+  from { 
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+  }
+  to { 
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 0;
   }
 }

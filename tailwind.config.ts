@@ -22,10 +22,12 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          glow: "hsl(var(--primary-glow))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
+          glow: "hsl(var(--secondary-glow))",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
@@ -47,6 +49,12 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        kolam: {
+          canvas: "hsl(var(--kolam-canvas))",
+          dots: "hsl(var(--kolam-dots))",
+          lines: "hsl(var(--kolam-lines))",
+          accent: "hsl(var(--kolam-accent))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -57,6 +65,21 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+      },
+      backgroundImage: {
+        'gradient-hero': 'var(--gradient-hero)',
+        'gradient-warm': 'var(--gradient-warm)',
+        'gradient-canvas': 'var(--gradient-canvas)',
+        'gradient-gold': 'var(--gradient-gold)',
+      },
+      boxShadow: {
+        'warm': 'var(--shadow-warm)',
+        'canvas': 'var(--shadow-canvas)',
+        'glow': 'var(--shadow-glow)',
+      },
+      transitionTimingFunction: {
+        'smooth': 'var(--transition-smooth)',
+        'bounce': 'var(--transition-bounce)',
       },
       borderRadius: {
         lg: "var(--radius)",
