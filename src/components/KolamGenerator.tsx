@@ -26,7 +26,7 @@ const KolamGenerator = () => {
   const [patternId, setPatternId] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Kolam generation logic adapted from the provided code
+  // Kolam generation using p5.js algorithm
   const generateKolam = async () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -35,10 +35,7 @@ const KolamGenerator = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const { gridSize, dotSpacing, complexity } = params;
     const canvasSize = 600;
-    const margin = 50;
-    
     canvas.width = canvasSize;
     canvas.height = canvasSize;
 
@@ -53,70 +50,96 @@ const KolamGenerator = () => {
     const seed = Date.now().toString(36);
     setPatternId(seed);
 
-    // Initialize connection matrix
+    // p5.js algorithm variables
+    const tsize = params.dotSpacing;
+    const margin = 50;
+    const tnumber = params.gridSize;
+
+    // Initialize connection matrices (p5.js style)
     const link: number[][] = [];
     const nlink: number[][] = [];
     
-    for (let i = 0; i <= gridSize; i++) {
+    for (let i = 0; i < tnumber + 1; i++) {
       link[i] = [];
       nlink[i] = [];
-      for (let j = 0; j <= gridSize; j++) {
+      for (let j = 0; j < tnumber + 1; j++) {
         link[i][j] = 1;
         nlink[i][j] = 1;
       }
     }
 
-    // Generate pattern based on symmetry and complexity
-    const limit = (100 - complexity) / 100 * 0.6 + 0.2; // Convert complexity to limit
-
-    // Apply symmetry patterns
-    for (let i = 0; i < nlink.length; i++) {
-      for (let j = i; j < nlink[0].length / 2; j++) {
-        const shouldConnect = Math.random() > limit ? 1 : 0;
-
-        switch (params.symmetryType) {
-          case 'rotational':
-            // 8-way rotational symmetry (original algorithm)
-            nlink[i][j] = shouldConnect;
-            nlink[i][nlink[0].length - j - 1] = shouldConnect;
-            nlink[j][i] = shouldConnect;
-            nlink[nlink[0].length - j - 1][i] = shouldConnect;
-            nlink[nlink.length - 1 - i][j] = shouldConnect;
-            nlink[nlink.length - 1 - i][nlink[0].length - j - 1] = shouldConnect;
-            nlink[j][nlink.length - 1 - i] = shouldConnect;
-            nlink[nlink[0].length - 1 - j][nlink.length - 1 - i] = shouldConnect;
-            break;
-          case 'mirror':
-            // Mirror symmetry
-            nlink[i][j] = shouldConnect;
-            nlink[i][nlink[0].length - j - 1] = shouldConnect;
-            nlink[nlink.length - 1 - i][j] = shouldConnect;
-            nlink[nlink.length - 1 - i][nlink[0].length - j - 1] = shouldConnect;
-            break;
-          case 'radial':
-            // Radial symmetry from center
-            const centerX = Math.floor(nlink.length / 2);
-            const centerY = Math.floor(nlink[0].length / 2);
-            const distance = Math.sqrt((i - centerX) ** 2 + (j - centerY) ** 2);
-            for (let angle = 0; angle < 8; angle++) {
-              const rad = (angle * Math.PI) / 4;
-              const x = Math.round(centerX + distance * Math.cos(rad));
-              const y = Math.round(centerY + distance * Math.sin(rad));
-              if (x >= 0 && x < nlink.length && y >= 0 && y < nlink[0].length) {
-                nlink[x][y] = shouldConnect;
-              }
-            }
-            break;
-          case 'freeform':
-            // No symmetry constraints
-            nlink[i][j] = shouldConnect;
-            break;
+    // Configure tile connections (p5.js configTile function)
+    const configTile = () => {
+      // Copy current state to link
+      for (let i = 0; i < link.length; i++) {
+        for (let j = 0; j < link[0].length; j++) {
+          link[i][j] = nlink[i][j];
         }
       }
-    }
+
+      // Calculate limit based on complexity
+      const limit = (100 - params.complexity) / 100 * 0.3 + 0.4; // 0.4 to 0.7 range
+
+      // Apply symmetry pattern based on type
+      if (params.symmetryType === 'rotational') {
+        // Original p5.js 8-way rotational symmetry
+        for (let i = 0; i < nlink.length; i++) {
+          for (let j = i; j < nlink[0].length / 2; j++) {
+            const l = Math.random() > limit ? 1 : 0;
+
+            nlink[i][j] = l;
+            nlink[i][nlink[0].length - j - 1] = l;
+            nlink[j][i] = l;
+            nlink[nlink[0].length - j - 1][i] = l;
+            nlink[nlink.length - 1 - i][j] = l;
+            nlink[nlink.length - 1 - i][nlink[0].length - j - 1] = l;
+            nlink[j][nlink.length - 1 - i] = l;
+            nlink[nlink[0].length - 1 - j][nlink.length - 1 - i] = l;
+          }
+        }
+      } else {
+        // Other symmetry types
+        for (let i = 0; i < nlink.length; i++) {
+          for (let j = 0; j < nlink[0].length; j++) {
+            if (Math.random() > limit) {
+              const shouldConnect = 1;
+              
+              switch (params.symmetryType) {
+                case 'mirror':
+                  nlink[i][j] = shouldConnect;
+                  nlink[i][nlink[0].length - j - 1] = shouldConnect;
+                  nlink[nlink.length - 1 - i][j] = shouldConnect;
+                  nlink[nlink.length - 1 - i][nlink[0].length - j - 1] = shouldConnect;
+                  break;
+                case 'radial':
+                  const centerX = Math.floor(nlink.length / 2);
+                  const centerY = Math.floor(nlink[0].length / 2);
+                  const distance = Math.sqrt((i - centerX) ** 2 + (j - centerY) ** 2);
+                  for (let angle = 0; angle < 8; angle++) {
+                    const rad = (angle * Math.PI) / 4;
+                    const x = Math.round(centerX + distance * Math.cos(rad));
+                    const y = Math.round(centerY + distance * Math.sin(rad));
+                    if (x >= 0 && x < nlink.length && y >= 0 && y < nlink[0].length) {
+                      nlink[x][y] = shouldConnect;
+                    }
+                  }
+                  break;
+                case 'freeform':
+                  nlink[i][j] = shouldConnect;
+                  break;
+              }
+            } else {
+              nlink[i][j] = 0;
+            }
+          }
+        }
+      }
+    };
+
+    configTile();
 
     // Animate the drawing process
-    await animateKolamDrawing(ctx, nlink, gridSize, dotSpacing, canvasSize, margin);
+    await animateKolamDrawing(ctx, link, nlink, tnumber, tsize, margin, canvasSize);
     
     setIsGenerating(false);
     toast({
@@ -127,81 +150,76 @@ const KolamGenerator = () => {
 
   const animateKolamDrawing = (
     ctx: CanvasRenderingContext2D,
+    link: number[][],
     nlink: number[][],
-    gridSize: number,
-    dotSpacing: number,
-    canvasSize: number,
-    margin: number
+    tnumber: number,
+    tsize: number,
+    margin: number,
+    canvasSize: number
   ): Promise<void> => {
     return new Promise((resolve) => {
-      let progress = 0;
+      let idx = 0;
+      
       const animate = () => {
-        if (progress >= 1) {
+        if (idx >= 1) {
           resolve();
           return;
         }
 
-        // Clear and redraw with current progress
+        // Clear and redraw background
         const gradient = ctx.createLinearGradient(0, 0, canvasSize, canvasSize);
         gradient.addColorStop(0, 'hsl(32, 50%, 98%)');
         gradient.addColorStop(1, 'hsl(32, 40%, 96%)');
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, canvasSize, canvasSize);
 
-        // Draw dots first
-        ctx.fillStyle = 'hsl(20, 25%, 25%)';
-        for (let i = 0; i <= gridSize; i++) {
-          for (let j = 0; j <= gridSize; j++) {
-            const x = i * dotSpacing + margin;
-            const y = j * dotSpacing + margin;
-            ctx.beginPath();
-            ctx.arc(x, y, 3, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
+        // Center the pattern
+        ctx.save();
+        ctx.translate(canvasSize / 2, canvasSize / 2);
+        ctx.rotate(Math.PI / 4); // 45 degree rotation like p5.js
+        ctx.translate(-(tsize * tnumber + 2 * margin) / 2, -(tsize * tnumber + 2 * margin) / 2);
 
-        // Draw patterns with progress
+        // Draw using p5.js drawTile logic
         ctx.strokeStyle = 'hsl(348, 70%, 40%)';
         ctx.lineWidth = 3;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
 
-        for (let i = 0; i < gridSize; i++) {
-          for (let j = 0; j < gridSize; j++) {
+        for (let i = 0; i < tnumber; i++) {
+          for (let j = 0; j < tnumber; j++) {
             if ((i + j) % 2 === 0) {
-              const centerX = i * dotSpacing + dotSpacing / 2 + margin;
-              const centerY = j * dotSpacing + dotSpacing / 2 + margin;
+              // Linear interpolation between link and nlink states
+              const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
               
-              const cornerRadius = (dotSpacing / 2) * nlink[i][j] * progress;
-              
-              if (cornerRadius > 0) {
-                // Draw rounded rectangles (fallback for browsers without roundRect)
-                ctx.beginPath();
-                
-                if (ctx.roundRect) {
-                  ctx.roundRect(
-                    centerX - dotSpacing / 2,
-                    centerY - dotSpacing / 2,
-                    dotSpacing,
-                    dotSpacing,
-                    cornerRadius
-                  );
-                } else {
-                  // Fallback: draw regular rectangle
-                  ctx.rect(
-                    centerX - dotSpacing / 2,
-                    centerY - dotSpacing / 2,
-                    dotSpacing,
-                    dotSpacing
-                  );
-                }
-                ctx.stroke();
+              const topLeft = (tsize / 2) * lerp(link[i][j], nlink[i][j], idx);
+              const topRight = (tsize / 2) * lerp(link[i + 1][j], nlink[i + 1][j], idx);
+              const bottomRight = (tsize / 2) * lerp(link[i + 1][j + 1], nlink[i + 1][j + 1], idx);
+              const bottomLeft = (tsize / 2) * lerp(link[i][j + 1], nlink[i][j + 1], idx);
+
+              const x = i * tsize + margin;
+              const y = j * tsize + margin;
+
+              // Draw rounded rectangle (p5.js rect with corner radii)
+              ctx.beginPath();
+              if (ctx.roundRect) {
+                ctx.roundRect(x, y, tsize, tsize, [topLeft, topRight, bottomRight, bottomLeft]);
+              } else {
+                // Fallback for browsers without roundRect
+                ctx.rect(x, y, tsize, tsize);
               }
+              ctx.stroke();
+
+              // Draw center point
+              ctx.fillStyle = 'hsl(20, 25%, 25%)';
+              ctx.beginPath();
+              ctx.arc(x + tsize / 2, y + tsize / 2, 2, 0, Math.PI * 2);
+              ctx.fill();
             }
           }
         }
 
-        progress += 0.03;
+        ctx.restore();
+        idx += 0.02; // Same increment as p5.js
         requestAnimationFrame(animate);
       };
       animate();
