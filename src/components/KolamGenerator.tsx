@@ -82,19 +82,18 @@ const KolamGenerator = () => {
 
       // Apply symmetry pattern based on type
       if (params.symmetryType === 'rotational') {
-        // Original p5.js 8-way rotational symmetry
+        // 4-way symmetry (horizontal + vertical mirrors)
         for (let i = 0; i < nlink.length; i++) {
-          for (let j = i; j < nlink[0].length / 2; j++) {
+          for (let j = 0; j < nlink[0].length / 2; j++) {
             const l = Math.random() > limit ? 1 : 0;
 
+            // left-right symmetry
             nlink[i][j] = l;
             nlink[i][nlink[0].length - j - 1] = l;
-            nlink[j][i] = l;
-            nlink[nlink[0].length - j - 1][i] = l;
-            nlink[nlink.length - 1 - i][j] = l;
-            nlink[nlink.length - 1 - i][nlink[0].length - j - 1] = l;
-            nlink[j][nlink.length - 1 - i] = l;
-            nlink[nlink[0].length - 1 - j][nlink.length - 1 - i] = l;
+
+            // top-bottom symmetry
+            nlink[nlink.length - i - 1][j] = l;
+            nlink[nlink.length - i - 1][nlink[0].length - j - 1] = l;
           }
         }
       } else {
@@ -173,10 +172,9 @@ const KolamGenerator = () => {
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, canvasSize, canvasSize);
 
-        // Center the pattern
+        // Center the pattern (no rotation like in the 4-way symmetry version)
         ctx.save();
         ctx.translate(canvasSize / 2, canvasSize / 2);
-        ctx.rotate(Math.PI / 4); // 45 degree rotation like p5.js
         ctx.translate(-(tsize * tnumber + 2 * margin) / 2, -(tsize * tnumber + 2 * margin) / 2);
 
         // Draw using p5.js drawTile logic
