@@ -331,7 +331,7 @@ const KolamGenerator = () => {
         <div className="grid lg:grid-cols-6 gap-8">
           {/* Control Panel */}
           <motion.div 
-            className="lg:col-span-1 space-y-6"
+            className="lg:col-span-2 space-y-6"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.8 }}
@@ -423,20 +423,6 @@ const KolamGenerator = () => {
                 </Button>
               </CardContent>
             </Card>
-
-            {/* Pattern Info */}
-            {patternId && (
-              <Card className="kolam-canvas">
-                <CardContent className="pt-6">
-                  <div className="text-center space-y-2">
-                    <p className="text-sm font-medium text-foreground">Pattern ID</p>
-                    <p className="text-xs font-mono text-muted-foreground bg-muted px-2 py-1 rounded">
-                      {patternId}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </motion.div>
 
           {/* Canvas Area */}
@@ -477,7 +463,7 @@ const KolamGenerator = () => {
 
           {/* Characteristics Panel */}
           <motion.div 
-            className="lg:col-span-2"
+            className="lg:col-span-1"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 1.2 }}
@@ -514,13 +500,6 @@ const KolamGenerator = () => {
                     <span className="text-muted-foreground">Complexity</span>
                     <span className="font-medium">{params.complexity}%</span>
                   </div>
-                  
-                  {patternId && (
-                    <div className="flex justify-between border-b border-border/20 pb-2">
-                      <span className="text-muted-foreground">Pattern ID</span>
-                      <span className="font-mono text-xs">{patternId}</span>
-                    </div>
-                  )}
                   
                   <div className="flex justify-between border-b border-border/20 pb-2">
                     <span className="text-muted-foreground">Total Dots</span>
