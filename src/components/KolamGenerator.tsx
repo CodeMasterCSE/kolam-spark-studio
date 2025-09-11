@@ -328,7 +328,7 @@ const KolamGenerator = () => {
       </motion.div>
 
       <div className="max-w-7xl mx-auto px-4 pb-16">
-        <div className="grid lg:grid-cols-4 gap-8">
+        <div className="grid lg:grid-cols-6 gap-8">
           {/* Control Panel */}
           <motion.div 
             className="lg:col-span-1 space-y-6"
@@ -470,6 +470,83 @@ const KolamGenerator = () => {
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                     </div>
                   )}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Characteristics Panel */}
+          <motion.div 
+            className="lg:col-span-2"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 1.2 }}
+          >
+            <Card className="kolam-canvas">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-primary">
+                  <Sparkles className="w-5 h-5" />
+                  Kolam Characteristics
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-3 text-sm">
+                  <div className="flex justify-between border-b border-border/20 pb-2">
+                    <span className="text-muted-foreground">Grid Size</span>
+                    <span className="font-medium">{params.gridSize}×{params.gridSize}</span>
+                  </div>
+                  
+                  <div className="flex justify-between border-b border-border/20 pb-2">
+                    <span className="text-muted-foreground">Dot Spacing</span>
+                    <span className="font-medium">{params.dotSpacing}px</span>
+                  </div>
+                  
+                  <div className="flex justify-between border-b border-border/20 pb-2">
+                    <span className="text-muted-foreground">Symmetry</span>
+                    <span className="font-medium capitalize">
+                      {params.symmetryType === '8way' ? '8-Way Rotational' : 
+                       params.symmetryType === '4way' ? '4-Way Mirror' : 
+                       params.symmetryType}
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between border-b border-border/20 pb-2">
+                    <span className="text-muted-foreground">Complexity</span>
+                    <span className="font-medium">{params.complexity}%</span>
+                  </div>
+                  
+                  {patternId && (
+                    <div className="flex justify-between border-b border-border/20 pb-2">
+                      <span className="text-muted-foreground">Pattern ID</span>
+                      <span className="font-mono text-xs">{patternId}</span>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between border-b border-border/20 pb-2">
+                    <span className="text-muted-foreground">Total Dots</span>
+                    <span className="font-medium">{(params.gridSize + 1) * (params.gridSize + 1)}</span>
+                  </div>
+                  
+                  <div className="flex justify-between border-b border-border/20 pb-2">
+                    <span className="text-muted-foreground">Active Tiles</span>
+                    <span className="font-medium">{Math.floor((params.gridSize * params.gridSize) / 2)}</span>
+                  </div>
+                  
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Cultural Origin</span>
+                    <span className="font-medium">South Indian</span>
+                  </div>
+                </div>
+
+                <div className="mt-6 p-3 bg-muted/30 rounded-lg">
+                  <h4 className="font-medium mb-2 text-primary">About This Pattern</h4>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {params.symmetryType === '8way' && "This Kolam features traditional 8-way rotational symmetry, creating harmonious patterns that radiate from the center with perfect balance."}
+                    {params.symmetryType === '4way' && "This Kolam uses 4-way mirror symmetry, reflecting horizontally and vertically to create a balanced, cross-like pattern structure."}
+                    {params.symmetryType === 'recursive' && "This recursive Kolam pattern contains self-similar structures at different scales, creating fractal-like beauty within the traditional format."}
+                    {params.symmetryType === 'fractal' && "This fractal Kolam uses mathematical principles to create patterns that repeat at multiple levels, inspired by sacred geometry."}
+                    {params.symmetryType === 'fibonacci' && "This Fibonacci Kolam incorporates the golden ratio and natural spiral patterns, connecting ancient art with mathematical harmony."}
+                  </p>
                 </div>
               </CardContent>
             </Card>
