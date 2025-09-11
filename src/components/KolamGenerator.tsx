@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 interface KolamParams {
   gridSize: number;
   dotSpacing: number;
-  symmetryType: 'mirror' | 'rotational' | 'radial' | 'freeform';
+  symmetryType: '8way' | '4way' | 'recursive' | 'fractal' | 'fibonacci';
   complexity: number;
 }
 
@@ -20,7 +20,7 @@ const KolamGenerator = () => {
   const [params, setParams] = useState<KolamParams>({
     gridSize: 9,
     dotSpacing: 40,
-    symmetryType: 'rotational',
+    symmetryType: '8way',
     complexity: 50,
   });
   const [patternId, setPatternId] = useState<string>('');
@@ -81,7 +81,23 @@ const KolamGenerator = () => {
       const limit = (100 - params.complexity) / 100 * 0.3 + 0.4; // 0.4 to 0.7 range
 
       // Apply symmetry pattern based on type
-      if (params.symmetryType === 'rotational') {
+      if (params.symmetryType === '8way') {
+        // Original p5.js 8-way rotational symmetry
+        for (let i = 0; i < nlink.length; i++) {
+          for (let j = i; j < nlink[0].length / 2; j++) {
+            const l = Math.random() > limit ? 1 : 0;
+
+            nlink[i][j] = l;
+            nlink[i][nlink[0].length - j - 1] = l;
+            nlink[j][i] = l;
+            nlink[nlink[0].length - j - 1][i] = l;
+            nlink[nlink.length - 1 - i][j] = l;
+            nlink[nlink.length - 1 - i][nlink[0].length - j - 1] = l;
+            nlink[j][nlink.length - 1 - i] = l;
+            nlink[nlink[0].length - 1 - j][nlink.length - 1 - i] = l;
+          }
+        }
+      } else if (params.symmetryType === '4way') {
         // 4-way symmetry (horizontal + vertical mirrors)
         for (let i = 0; i < nlink.length; i++) {
           for (let j = 0; j < nlink[0].length / 2; j++) {
@@ -97,34 +113,61 @@ const KolamGenerator = () => {
           }
         }
       } else {
-        // Other symmetry types
+        // Other symmetry types: recursive, fractal, fibonacci
         for (let i = 0; i < nlink.length; i++) {
           for (let j = 0; j < nlink[0].length; j++) {
             if (Math.random() > limit) {
               const shouldConnect = 1;
               
               switch (params.symmetryType) {
-                case 'mirror':
-                  nlink[i][j] = shouldConnect;
-                  nlink[i][nlink[0].length - j - 1] = shouldConnect;
-                  nlink[nlink.length - 1 - i][j] = shouldConnect;
-                  nlink[nlink.length - 1 - i][nlink[0].length - j - 1] = shouldConnect;
-                  break;
-                case 'radial':
+                case 'recursive':
+                  // Recursive pattern: create self-similar structures at different scales
+                  const scale = Math.floor(nlink.length / 3);
                   const centerX = Math.floor(nlink.length / 2);
                   const centerY = Math.floor(nlink[0].length / 2);
-                  const distance = Math.sqrt((i - centerX) ** 2 + (j - centerY) ** 2);
-                  for (let angle = 0; angle < 8; angle++) {
-                    const rad = (angle * Math.PI) / 4;
-                    const x = Math.round(centerX + distance * Math.cos(rad));
-                    const y = Math.round(centerY + distance * Math.sin(rad));
-                    if (x >= 0 && x < nlink.length && y >= 0 && y < nlink[0].length) {
-                      nlink[x][y] = shouldConnect;
-                    }
+                  
+                  // Main pattern
+                  nlink[i][j] = shouldConnect;
+                  
+                  // Recursive copies at quarter positions
+                  if (i < scale && j < scale) {
+                    nlink[i + scale][j + scale] = shouldConnect;
+                    nlink[i + 2 * scale][j + 2 * scale] = shouldConnect;
                   }
                   break;
-                case 'freeform':
-                  nlink[i][j] = shouldConnect;
+                  
+                case 'fractal':
+                  // Fractal pattern: Sierpinski triangle-like structure
+                  const fractalSize = nlink.length;
+                  let fi = i, fj = j;
+                  let fractalValue = 1;
+                  
+                  while (fi > 0 && fj > 0) {
+                    if (fi % 2 === 1 && fj % 2 === 1) {
+                      fractalValue = 0;
+                      break;
+                    }
+                    fi = Math.floor(fi / 2);
+                    fj = Math.floor(fj / 2);
+                  }
+                  nlink[i][j] = fractalValue;
+                  break;
+                  
+                case 'fibonacci':
+                  // Fibonacci pattern: use Fibonacci sequence for connections
+                  const fib = [1, 1, 2, 3, 5, 8, 13, 21];
+                  const fibIndex = (i + j) % fib.length;
+                  const fibValue = fib[fibIndex];
+                  
+                  // Create spiral-like patterns based on Fibonacci numbers
+                  const angle = (fibValue * Math.PI * 2) / 8;
+                  const radius = Math.sqrt(i * i + j * j);
+                  
+                  if (Math.floor(radius + angle) % fibValue === 0) {
+                    nlink[i][j] = shouldConnect;
+                  } else {
+                    nlink[i][j] = 0;
+                  }
                   break;
               }
             } else {
@@ -346,10 +389,11 @@ const KolamGenerator = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="rotational">Rotational (8-way)</SelectItem>
-                      <SelectItem value="mirror">Mirror</SelectItem>
-                      <SelectItem value="radial">Radial</SelectItem>
-                      <SelectItem value="freeform">Freeform</SelectItem>
+                      <SelectItem value="8way">8-Way Rotational</SelectItem>
+                      <SelectItem value="4way">4-Way Mirror</SelectItem>
+                      <SelectItem value="recursive">Recursive</SelectItem>
+                      <SelectItem value="fractal">Fractal</SelectItem>
+                      <SelectItem value="fibonacci">Fibonacci</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
