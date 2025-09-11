@@ -447,10 +447,18 @@ const KolamGenerator = () => {
             transition={{ duration: 0.8, delay: 1 }}
           >
             <Card className="kolam-canvas">
-              <CardHeader className="text-center">
+              <CardHeader className="text-center space-y-4">
                 <CardTitle className="text-primary">Kolam Canvas</CardTitle>
+                <Button 
+                  onClick={downloadKolam}
+                  disabled={!patternId}
+                  className="btn-cultural"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download PNG
+                </Button>
               </CardHeader>
-              <CardContent className="flex flex-col items-center space-y-4">
+              <CardContent className="flex flex-col items-center">
                 <div className="relative animate-float">
                   <canvas
                     ref={canvasRef}
@@ -463,15 +471,6 @@ const KolamGenerator = () => {
                     </div>
                   )}
                 </div>
-                
-                <Button 
-                  onClick={downloadKolam}
-                  disabled={!patternId}
-                  className="btn-cultural"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Download PNG
-                </Button>
               </CardContent>
             </Card>
           </motion.div>
