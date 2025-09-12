@@ -185,6 +185,48 @@
     background: var(--gradient-gold);
     @apply text-primary font-medium px-6 py-3 rounded-lg shadow-sm hover:shadow-warm transition-all duration-300;
   }
+
+  /* Modern UI helpers */
+  .glass-panel {
+    @apply border border-border/40 rounded-xl;
+    background: linear-gradient(
+      180deg,
+      hsl(var(--card) / 0.7),
+      hsl(var(--card) / 0.55)
+    );
+    backdrop-filter: saturate(120%) blur(8px);
+    box-shadow: 0 10px 30px hsl(0 0% 0% / 0.06);
+  }
+
+  .soft-border {
+    @apply border border-border/50 rounded-lg;
+  }
+
+  .grid-background {
+    background-image:
+      radial-gradient(hsl(var(--muted)) 1px, transparent 1px),
+      linear-gradient(180deg, hsl(var(--background)), transparent 40%),
+      var(--gradient-warm);
+    background-size: 20px 20px, 100% 100%, 100% 100%;
+    background-position: 0 0, 0 0, 0 0;
+  }
+
+  .site-footer {
+    background: hsl(var(--card));
+    color: hsl(var(--muted-foreground));
+    border-top: 1px solid hsl(var(--border));
+  }
+
+  .section-label {
+    @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium;
+    background: hsl(var(--accent) / 0.12);
+    color: hsl(var(--accent));
+    border: 1px solid hsl(var(--accent) / 0.25);
+  }
+
+  .section-title {
+    @apply text-2xl font-semibold tracking-tight text-foreground;
+  }
 }
 
 @keyframes float {
