@@ -3,14 +3,17 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, Sparkles, Grid3X3, Settings2, Sun, Moon } from 'lucide-react';
+import { Download, Grid3X3, Sun, Moon } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { symmetryStrategies, SymmetryType } from '@/lib/symmetry';
 
 interface KolamParams {
   gridSize: number;
   dotSpacing: number;
-  symmetryType: '8way' | '4way' | 'recursive' | 'fractal' | 'fibonacci';
+  symmetryType: SymmetryType;
+  lineThickness: number;
 }
 
 const KolamGenerator = () => {
@@ -28,9 +31,12 @@ const KolamGenerator = () => {
     gridSize: 9,
     dotSpacing: 40,
     symmetryType: '8way',
+    lineThickness: 3,
   });
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDark, setIsDark] = useState<boolean>(false);
+
+  // (removed) custom color redraw hook
 
   // Kolam generation using p5.js algorithm
   const generateKolam = async () => {
@@ -82,105 +88,11 @@ const KolamGenerator = () => {
         }
       }
 
-      // Fixed probability threshold for connections
-      const limit = 0.55;
+      // Randomized probability threshold for connections per generation (0.4 to 0.7)
+      const limit = 0.4 + Math.random() * 0.3;
 
-      // Apply symmetry pattern based on type
-      if (params.symmetryType === '8way') {
-        // Original p5.js 8-way rotational symmetry
-        for (let i = 0; i < nlink.length; i++) {
-          for (let j = i; j < nlink[0].length / 2; j++) {
-            const l = Math.random() > limit ? 1 : 0;
-
-            nlink[i][j] = l;
-            nlink[i][nlink[0].length - j - 1] = l;
-            nlink[j][i] = l;
-            nlink[nlink[0].length - j - 1][i] = l;
-            nlink[nlink.length - 1 - i][j] = l;
-            nlink[nlink.length - 1 - i][nlink[0].length - j - 1] = l;
-            nlink[j][nlink.length - 1 - i] = l;
-            nlink[nlink[0].length - 1 - j][nlink.length - 1 - i] = l;
-          }
-        }
-      } else if (params.symmetryType === '4way') {
-        // 4-way symmetry (horizontal + vertical mirrors)
-        for (let i = 0; i < nlink.length; i++) {
-          for (let j = 0; j < nlink[0].length / 2; j++) {
-            const l = Math.random() > limit ? 1 : 0;
-
-            // left-right symmetry
-            nlink[i][j] = l;
-            nlink[i][nlink[0].length - j - 1] = l;
-
-            // top-bottom symmetry
-            nlink[nlink.length - i - 1][j] = l;
-            nlink[nlink.length - i - 1][nlink[0].length - j - 1] = l;
-          }
-        }
-      } else {
-        // Other symmetry types: recursive, fractal, fibonacci
-        for (let i = 0; i < nlink.length; i++) {
-          for (let j = 0; j < nlink[0].length; j++) {
-            if (Math.random() > limit) {
-              const shouldConnect = 1;
-              
-              switch (params.symmetryType) {
-                case 'recursive':
-                  // Recursive pattern: create self-similar structures at different scales
-                  const scale = Math.floor(nlink.length / 3);
-                  const centerX = Math.floor(nlink.length / 2);
-                  const centerY = Math.floor(nlink[0].length / 2);
-                  
-                  // Main pattern
-                  nlink[i][j] = shouldConnect;
-                  
-                  // Recursive copies at quarter positions
-                  if (i < scale && j < scale) {
-                    nlink[i + scale][j + scale] = shouldConnect;
-                    nlink[i + 2 * scale][j + 2 * scale] = shouldConnect;
-                  }
-                  break;
-                  
-                case 'fractal':
-                  // Fractal pattern: Sierpinski triangle-like structure
-                  const fractalSize = nlink.length;
-                  let fi = i, fj = j;
-                  let fractalValue = 1;
-                  
-                  while (fi > 0 && fj > 0) {
-                    if (fi % 2 === 1 && fj % 2 === 1) {
-                      fractalValue = 0;
-                      break;
-                    }
-                    fi = Math.floor(fi / 2);
-                    fj = Math.floor(fj / 2);
-                  }
-                  nlink[i][j] = fractalValue;
-                  break;
-                  
-                case 'fibonacci':
-                  // Fibonacci pattern: use Fibonacci sequence for connections
-                  const fib = [1, 1, 2, 3, 5, 8, 13, 21];
-                  const fibIndex = (i + j) % fib.length;
-                  const fibValue = fib[fibIndex];
-                  
-                  // Create spiral-like patterns based on Fibonacci numbers
-                  const angle = (fibValue * Math.PI * 2) / 8;
-                  const radius = Math.sqrt(i * i + j * j);
-                  
-                  if (Math.floor(radius + angle) % fibValue === 0) {
-                    nlink[i][j] = shouldConnect;
-                  } else {
-                    nlink[i][j] = 0;
-                  }
-                  break;
-              }
-            } else {
-              nlink[i][j] = 0;
-            }
-          }
-        }
-      }
+      // Apply symmetry pattern based on type using strategies
+      symmetryStrategies[params.symmetryType](nlink, limit);
     };
 
     configTile();
@@ -230,7 +142,7 @@ const KolamGenerator = () => {
 
         // Draw using p5.js drawTile logic
         ctx.strokeStyle = linesColor;
-        ctx.lineWidth = 3;
+        ctx.lineWidth = params.lineThickness;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
 
@@ -301,7 +213,7 @@ const KolamGenerator = () => {
     ctx.translate(-(tsize * tnumber + 2 * margin) / 2, -(tsize * tnumber + 2 * margin) / 2);
 
     ctx.strokeStyle = linesColor;
-    ctx.lineWidth = 3;
+    ctx.lineWidth = params.lineThickness;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
@@ -334,18 +246,98 @@ const KolamGenerator = () => {
   };
 
   const downloadKolam = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
+    const cache = cachedRef.current;
+    if (!cache) return;
+    const off = document.createElement('canvas');
+    renderCachedToCanvas(off, 3);
     const link = document.createElement('a');
-    link.download = 'kolam.png';
-    link.href = canvas.toDataURL();
+    link.download = 'kolam.jpeg';
+    link.href = off.toDataURL('image/jpeg', 0.98);
     link.click();
 
     toast({
       title: "Download Started",
       description: "Your Kolam pattern is being downloaded.",
     });
+  };
+
+  // removed SVG export per request
+
+  const downloadAsPDF = async () => {
+    const cache = cachedRef.current;
+    if (!cache) return;
+    try {
+      const mod = await import(/* @vite-ignore */ 'https://cdn.skypack.dev/jspdf');
+      const jsPDF = (mod as any).jsPDF || (mod as any).default;
+      // Render at high scale for crisp PDF embedding
+      const off = document.createElement('canvas');
+      renderCachedToCanvas(off, 4);
+      const imgData = off.toDataURL('image/png');
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: [off.width, off.height] });
+      pdf.addImage(imgData, 'PNG', 0, 0, off.width, off.height);
+      pdf.save('kolam.pdf');
+    } catch (e) {
+      toast({ title: 'PDF export failed', description: 'Dependency not available.' });
+    }
+  };
+
+  // Render cached pattern to a provided canvas with an optional scale factor for high-res exports
+  const renderCachedToCanvas = (targetCanvas: HTMLCanvasElement, scale = 1) => {
+    const cache = cachedRef.current;
+    if (!cache) return;
+    const { link, nlink, tnumber, tsize, margin, canvasSize } = cache;
+    const ctx = targetCanvas.getContext('2d');
+    if (!ctx) return;
+    const rootStyle = getComputedStyle(document.documentElement);
+    const canvasColor = `hsl(${rootStyle.getPropertyValue('--kolam-canvas').trim()})`;
+    const linesColor = `hsl(${rootStyle.getPropertyValue('--kolam-lines').trim()})`;
+    const dotsColor = `hsl(${rootStyle.getPropertyValue('--kolam-dots').trim()})`;
+
+    const scaledSize = Math.round(canvasSize * scale);
+    const tsizeScaled = tsize * scale;
+    const marginScaled = margin * scale;
+
+    targetCanvas.width = scaledSize;
+    targetCanvas.height = scaledSize;
+
+    ctx.fillStyle = canvasColor;
+    ctx.fillRect(0, 0, scaledSize, scaledSize);
+
+    ctx.save();
+    ctx.translate(scaledSize / 2, scaledSize / 2);
+    ctx.translate(-(tsizeScaled * tnumber + 2 * marginScaled) / 2, -(tsizeScaled * tnumber + 2 * marginScaled) / 2);
+
+    ctx.strokeStyle = linesColor;
+    ctx.lineWidth = params.lineThickness * scale;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    const idx = 1;
+    const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+    for (let i = 0; i < tnumber; i++) {
+      for (let j = 0; j < tnumber; j++) {
+        if ((i + j) % 2 === 0) {
+          const topLeft = (tsizeScaled / 2) * lerp(link[i][j], nlink[i][j], idx);
+          const topRight = (tsizeScaled / 2) * lerp(link[i + 1][j], nlink[i + 1][j], idx);
+          const bottomRight = (tsizeScaled / 2) * lerp(link[i + 1][j + 1], nlink[i + 1][j + 1], idx);
+          const bottomLeft = (tsizeScaled / 2) * lerp(link[i][j + 1], nlink[i][j + 1], idx);
+          const x = i * tsizeScaled + marginScaled;
+          const y = j * tsizeScaled + marginScaled;
+          ctx.beginPath();
+          if ((ctx as any).roundRect) {
+            (ctx as any).roundRect(x, y, tsizeScaled, tsizeScaled, [topLeft, topRight, bottomRight, bottomLeft]);
+          } else {
+            ctx.rect(x, y, tsizeScaled, tsizeScaled);
+          }
+          ctx.stroke();
+          ctx.fillStyle = dotsColor;
+          ctx.beginPath();
+          ctx.arc(x + tsizeScaled / 2, y + tsizeScaled / 2, 2 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+    ctx.restore();
   };
 
   useEffect(() => {
@@ -394,80 +386,37 @@ const KolamGenerator = () => {
   };
 
   return (
-    <div className="min-h-screen grid-background">
-      <header className="sticky top-0 z-20 backdrop-blur supports-[backdrop-filter]:bg-background/70 border-b">
+    <div className="h-screen flex flex-col grid-background overflow-hidden">
+      <header className="sticky top-0 z-20 backdrop-blur supports-[backdrop-filter]:bg-background/70 border-b flex-shrink-0">
         <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary font-bold">K</span>
-            <span className="font-semibold tracking-tight">Kolam Art Generator</span>
+            <span className="font-semibold tracking-tight">Kolamkari</span>
           </div>
           <div className="hidden sm:flex items-center gap-3 text-sm text-muted-foreground">
             <Button variant="secondary" size="sm" onClick={toggleTheme} className="ml-2">
               {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </Button>
+          </Button>
           </div>
         </div>
       </header>
-      {/* Hero Section */}
-      <motion.div 
-        className="text-center py-20 px-4"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-      >
-        <motion.h1 
-          className="heading-traditional mb-6"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1, delay: 0.2 }}
-        >
-          Kolam Design Identification & Recreation
-        </motion.h1>
-        <motion.p 
-          className="text-cultural mb-10 max-w-2xl mx-auto"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-        >
-          AI-powered exploration of traditional Indian Kolam art patterns
-        </motion.p>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.6 }}
-        >
-          <Button 
-            onClick={generateKolam}
-            disabled={isGenerating}
-            className="btn-hero"
-          >
-            <Sparkles className="w-5 h-5 mr-2" />
-            {isGenerating ? 'Generating...' : 'Generate Kolam'}
-          </Button>
-        </motion.div>
-      </motion.div>
-
-      <div className="max-w-7xl mx-auto px-4 pb-16">
-        <div className="grid lg:grid-cols-7 gap-8">
+      
+      <div className="flex-1 max-w-7xl mx-auto px-4 py-6 overflow-hidden min-h-0">
+        <div className="grid lg:grid-cols-7 gap-8 h-full min-h-0">
           {/* Control Panel */}
           <motion.div 
-            className="lg:col-span-2 space-y-6"
+            className="lg:col-span-2 flex flex-col min-h-0 overflow-hidden"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.8 }}
           >
-            <Card className="glass-panel">
-              <CardHeader>
-                <div className="section-label mb-3">
-                  <Settings2 className="w-4 h-4" />
-                  Controls
-                </div>
+            <Card className="glass-panel flex-1 flex flex-col min-h-0 overflow-hidden" style={{ maxHeight: '100%' }}>
+              <CardHeader className="flex-shrink-0 pb-3">
                 <CardTitle className="section-title">
-                  <Settings2 className="w-5 h-5" />
                   Pattern Controls
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-6 panel-scroll flex-1 overflow-y-auto pr-2 pb-6 min-h-0 max-h-full" style={{ maxHeight: 'calc(100vh - 250px)' }}>
                 {/* Grid Size */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-foreground">
@@ -488,7 +437,7 @@ const KolamGenerator = () => {
                       type="button"
                       variant="secondary"
                       size="sm"
-                      onClick={() => setParams(prev => ({ ...prev, gridSize: Math.min(15, prev.gridSize + 2) }))}
+                      onClick={() => setParams(prev => ({ ...prev, gridSize: Math.min(11, prev.gridSize + 2) }))}
                       aria-label="Increase grid size"
                     >
                       +
@@ -517,7 +466,7 @@ const KolamGenerator = () => {
                       type="button"
                       variant="secondary"
                       size="sm"
-                      onClick={() => setParams(prev => ({ ...prev, dotSpacing: Math.min(60, prev.dotSpacing + 5) }))}
+                      onClick={() => setParams(prev => ({ ...prev, dotSpacing: Math.min(50, prev.dotSpacing + 5) }))}
                       aria-label="Increase dot spacing"
                     >
                       +
@@ -543,6 +492,9 @@ const KolamGenerator = () => {
                     <SelectContent>
                       <SelectItem value="8way">8-Way Rotational</SelectItem>
                       <SelectItem value="4way">4-Way Mirror</SelectItem>
+                      <SelectItem value="vertical">Vertical Mirror</SelectItem>
+                      <SelectItem value="horizontal">Horizontal Mirror</SelectItem>
+                      <SelectItem value="diagonal">Diagonal</SelectItem>
                       <SelectItem value="recursive">Recursive</SelectItem>
                       <SelectItem value="fractal">Fractal</SelectItem>
                       <SelectItem value="fibonacci">Fibonacci</SelectItem>
@@ -551,27 +503,51 @@ const KolamGenerator = () => {
                   <p className="text-xs text-muted-foreground">Choose the geometric principle used to mirror or repeat motifs.</p>
                 </div>
 
-                <Button 
-                  onClick={generateKolam}
-                  disabled={isGenerating}
-                  className="w-full btn-cultural"
-                >
-                  <Grid3X3 className="w-4 h-4 mr-2" />
-                  Regenerate
-                </Button>
+                
+
+                {/* Line Thickness */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">
+                    Line Thickness: {params.lineThickness}px
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setParams(prev => ({ ...prev, lineThickness: Math.max(1, prev.lineThickness - 1) }))}
+                      aria-label="Decrease line thickness"
+                    >
+                      -
+                    </Button>
+                    <div className="min-w-[3rem] text-center font-medium">{params.lineThickness}</div>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setParams(prev => ({ ...prev, lineThickness: Math.min(8, prev.lineThickness + 1) }))}
+                      aria-label="Increase line thickness"
+                    >
+                      +
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Adjusts stroke width of lines on the canvas.</p>
+                </div>
+
+                
               </CardContent>
             </Card>
           </motion.div>
 
           {/* Canvas Area */}
           <motion.div 
-            className="lg:col-span-3"
+            className="lg:col-span-3 flex flex-col"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 1 }}
           >
-            <Card className="kolam-canvas">
-              <CardHeader className="space-y-4">
+            <Card className="kolam-canvas flex-1 flex flex-col">
+              <CardHeader className="space-y-4 flex-shrink-0">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-primary section-title">Kolam Canvas</CardTitle>
                   <div className="flex items-center gap-2">
@@ -579,24 +555,28 @@ const KolamGenerator = () => {
                       <Grid3X3 className="w-4 h-4 mr-2" />
                       Regenerate
                     </Button>
-                    <Button 
-                      onClick={downloadKolam}
-                      disabled={isGenerating}
-                      className="btn-cultural"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      PNG
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button className="btn-cultural">
+                  <Download className="w-4 h-4 mr-2" />
+                          Download
+                </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={downloadKolam}>JPEG</DropdownMenuItem>
+                        <DropdownMenuItem onClick={downloadAsPDF}>PDF</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground">Rendered on an HTML Canvas using symmetry-driven connection rules.</p>
               </CardHeader>
-              <CardContent className="flex flex-col items-center">
+              <CardContent className="flex flex-col items-center justify-center flex-1">
                 <div className="relative animate-float soft-border">
                   <canvas
                     ref={canvasRef}
                     className="border-2 border-border/30 rounded-lg shadow-inner bg-kolam-canvas"
-                    style={{ maxWidth: '100%', height: 'auto' }}
+                    style={{ maxWidth: '100%', height: 'auto', maxHeight: '500px' }}
                   />
                   {isGenerating && (
                     <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-lg">
@@ -610,20 +590,16 @@ const KolamGenerator = () => {
 
           {/* Characteristics Panel */}
           <motion.div 
-            className="lg:col-span-2"
+            className="lg:col-span-2 flex flex-col"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 1.2 }}
           >
-            <Card className="glass-panel">
-              <CardHeader>
-                <div className="section-label mb-3">
-                  <Sparkles className="w-5 h-5" />
-                  Highlights
-                </div>
+            <Card className="glass-panel flex-1 flex flex-col">
+              <CardHeader className="flex-shrink-0">
                 <CardTitle className="section-title">Kolam Characteristics</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 flex-1 overflow-y-auto">
                 <div className="grid gap-3 text-sm">
                   <div className="flex justify-between border-b border-border/20 pb-2">
                     <span className="text-muted-foreground">Grid Size</span>
@@ -681,9 +657,9 @@ const KolamGenerator = () => {
           </motion.div>
         </div>
       </div>
-      <footer className="site-footer">
+      <footer className="site-footer sticky bottom-0 z-20 backdrop-blur supports-[backdrop-filter]:bg-background/70 flex-shrink-0">
         <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between text-xs">
-          <span>© {new Date().getFullYear()} Kolam Art Generator</span>
+          <span>© {new Date().getFullYear()} Kolamkari</span>
           <span className="text-center">Inspired by traditional Kolam art</span>
           <span>A SIH 2025 Project Demo</span>
         </div>

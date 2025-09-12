@@ -217,6 +217,28 @@
     border-top: 1px solid hsl(var(--border));
   }
 
+  /* Scrollable panel with themed, minimal scrollbar */
+  .panel-scroll {
+    overflow-y: auto;
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: hsl(var(--accent)) hsl(var(--muted));
+  }
+  .panel-scroll::-webkit-scrollbar {
+    width: 8px;
+  }
+  .panel-scroll::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 9999px;
+  }
+  .panel-scroll::-webkit-scrollbar-thumb {
+    background: hsl(var(--accent));
+    border-radius: 9999px;
+    border: 2px solid hsl(var(--muted));
+  }
+  .panel-scroll::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary));
+  }
+
   .section-label {
     @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium;
     background: hsl(var(--accent) / 0.12);
