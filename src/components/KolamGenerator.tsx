@@ -35,6 +35,7 @@ const KolamGenerator = () => {
   });
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDark, setIsDark] = useState<boolean>(false);
+  const [generatedParams, setGeneratedParams] = useState<KolamParams | null>(null);
 
   // (removed) custom color redraw hook
 
@@ -99,6 +100,9 @@ const KolamGenerator = () => {
 
     // Cache the generated pattern so we can redraw without regenerating
     cachedRef.current = { link, nlink, tnumber, tsize, margin, canvasSize };
+
+    // Update the generated parameters to match what was actually generated
+    setGeneratedParams({ ...params });
 
     // Animate the drawing process
     await animateKolamDrawing(ctx, link, nlink, tnumber, tsize, margin, canvasSize);
@@ -600,58 +604,67 @@ const KolamGenerator = () => {
                 <CardTitle className="section-title">Kolam Characteristics</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4 flex-1 overflow-y-auto">
-                <div className="grid gap-3 text-sm">
-                  <div className="flex justify-between border-b border-border/20 pb-2">
-                    <span className="text-muted-foreground">Grid Size</span>
-                    <span className="font-medium">{params.gridSize}×{params.gridSize}</span>
-                  </div>
-                  
-                  <div className="flex justify-between border-b border-border/20 pb-2">
-                    <span className="text-muted-foreground">Dot Spacing</span>
-                    <span className="font-medium">{params.dotSpacing}px</span>
-                  </div>
-                  
-                  <div className="flex justify-between border-b border-border/20 pb-2">
-                    <span className="text-muted-foreground">Symmetry</span>
-                    <span className="font-medium capitalize">
-                      {params.symmetryType === '8way' ? '8-Way Rotational' : 
-                       params.symmetryType === '4way' ? '4-Way Mirror' : 
-                       params.symmetryType}
-                    </span>
-                  </div>
-                  
-                  <div className="flex justify-between border-b border-border/20 pb-2">
-                    <span className="text-muted-foreground">Total Dots</span>
-                    <span className="font-medium">{(params.gridSize + 1) * (params.gridSize + 1)}</span>
-                  </div>
-                  
-                  <div className="flex justify-between border-b border-border/20 pb-2">
-                    <span className="text-muted-foreground">Active Tiles</span>
-                    <span className="font-medium">{Math.floor((params.gridSize * params.gridSize) / 2)}</span>
-                  </div>
-                  
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Cultural Origin</span>
-                    <span className="font-medium">South Indian</span>
-                  </div>
-                </div>
+                {generatedParams ? (
+                  <>
+                    <div className="grid gap-3 text-sm">
+                      <div className="flex justify-between border-b border-border/20 pb-2">
+                        <span className="text-muted-foreground">Grid Size</span>
+                        <span className="font-medium">{generatedParams.gridSize}×{generatedParams.gridSize}</span>
+                      </div>
+                      
+                      <div className="flex justify-between border-b border-border/20 pb-2">
+                        <span className="text-muted-foreground">Dot Spacing</span>
+                        <span className="font-medium">{generatedParams.dotSpacing}px</span>
+                      </div>
+                      
+                      <div className="flex justify-between border-b border-border/20 pb-2">
+                        <span className="text-muted-foreground">Symmetry</span>
+                        <span className="font-medium capitalize">
+                          {generatedParams.symmetryType === '8way' ? '8-Way Rotational' : 
+                           generatedParams.symmetryType === '4way' ? '4-Way Mirror' : 
+                           generatedParams.symmetryType}
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between border-b border-border/20 pb-2">
+                        <span className="text-muted-foreground">Total Dots</span>
+                        <span className="font-medium">{(generatedParams.gridSize + 1) * (generatedParams.gridSize + 1)}</span>
+                      </div>
+                      
+                      <div className="flex justify-between border-b border-border/20 pb-2">
+                        <span className="text-muted-foreground">Active Tiles</span>
+                        <span className="font-medium">{Math.floor((generatedParams.gridSize * generatedParams.gridSize) / 2)}</span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Cultural Origin</span>
+                        <span className="font-medium">South Indian</span>
+                      </div>
+                    </div>
 
-                <div className="flex flex-wrap gap-2 pt-2">
-                  <Badge variant="secondary">{params.gridSize} × {params.gridSize}</Badge>
-                  <Badge variant="outline" className="capitalize">{params.symmetryType}</Badge>
-                  <Badge variant="secondary">{params.dotSpacing}px spacing</Badge>
-                </div>
+                    <div className="flex flex-wrap gap-2 pt-2">
+                      <Badge variant="secondary">{generatedParams.gridSize} × {generatedParams.gridSize}</Badge>
+                      <Badge variant="outline" className="capitalize">{generatedParams.symmetryType}</Badge>
+                      <Badge variant="secondary">{generatedParams.dotSpacing}px spacing</Badge>
+                    </div>
 
-                <div className="mt-6 p-3 bg-muted/30 rounded-lg">
-                  <h4 className="font-medium mb-2 text-primary section-title text-base">About This Pattern</h4>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    {params.symmetryType === '8way' && "This Kolam features traditional 8-way rotational symmetry, creating harmonious patterns that radiate from the center with perfect balance."}
-                    {params.symmetryType === '4way' && "This Kolam uses 4-way mirror symmetry, reflecting horizontally and vertically to create a balanced, cross-like pattern structure."}
-                    {params.symmetryType === 'recursive' && "This recursive Kolam pattern contains self-similar structures at different scales, creating fractal-like beauty within the traditional format."}
-                    {params.symmetryType === 'fractal' && "This fractal Kolam uses mathematical principles to create patterns that repeat at multiple levels, inspired by sacred geometry."}
-                    {params.symmetryType === 'fibonacci' && "This Fibonacci Kolam incorporates the golden ratio and natural spiral patterns, connecting ancient art with mathematical harmony."}
-                  </p>
-                </div>
+                    <div className="mt-6 p-3 bg-muted/30 rounded-lg">
+                      <h4 className="font-medium mb-2 text-primary section-title text-base">About This Pattern</h4>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        {generatedParams.symmetryType === '8way' && "This Kolam features traditional 8-way rotational symmetry, creating harmonious patterns that radiate from the center with perfect balance."}
+                        {generatedParams.symmetryType === '4way' && "This Kolam uses 4-way mirror symmetry, reflecting horizontally and vertically to create a balanced, cross-like pattern structure."}
+                        {generatedParams.symmetryType === 'recursive' && "This recursive Kolam pattern contains self-similar structures at different scales, creating fractal-like beauty within the traditional format."}
+                        {generatedParams.symmetryType === 'fractal' && "This fractal Kolam uses mathematical principles to create patterns that repeat at multiple levels, inspired by sacred geometry."}
+                        {generatedParams.symmetryType === 'fibonacci' && "This Fibonacci Kolam incorporates the golden ratio and natural spiral patterns, connecting ancient art with mathematical harmony."}
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center text-muted-foreground py-8">
+                    <p>No Kolam generated yet</p>
+                    <p className="text-sm">Generate a pattern to see its characteristics</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>
