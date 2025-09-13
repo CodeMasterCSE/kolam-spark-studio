@@ -8,12 +8,14 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { symmetryStrategies, SymmetryType } from '@/lib/symmetry';
+import { drawRecursiveKolam } from '@/lib/symmetry/recursive';
 
 interface KolamParams {
   gridSize: number;
   dotSpacing: number;
   symmetryType: SymmetryType;
   lineThickness: number;
+  depth: number;
 }
 
 const KolamGenerator = () => {
@@ -25,13 +27,13 @@ const KolamGenerator = () => {
     tnumber: number;
     tsize: number;
     margin: number;
-    canvasSize: number;
   } | null>(null);
   const [params, setParams] = useState<KolamParams>({
     gridSize: 9,
     dotSpacing: 40,
     symmetryType: '8way',
     lineThickness: 3,
+    depth: 3,
   });
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDark, setIsDark] = useState<boolean>(false);
@@ -48,7 +50,11 @@ const KolamGenerator = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const canvasSize = 600;
+    // Calculate responsive canvas size based on screen height
+    const screenHeight = window.innerHeight;
+    const availableHeight = screenHeight - 200; // Account for header, footer, and padding
+    const canvasSize = Math.min(700, Math.max(500, availableHeight * 0.7)); // Responsive size between 500-700px
+    
     canvas.width = canvasSize;
     canvas.height = canvasSize;
 
@@ -93,13 +99,17 @@ const KolamGenerator = () => {
       const limit = 0.4 + Math.random() * 0.3;
 
       // Apply symmetry pattern based on type using strategies
-      symmetryStrategies[params.symmetryType](nlink, limit);
+      if (params.symmetryType === 'recursive') {
+        (symmetryStrategies[params.symmetryType] as any)(nlink, limit, params.depth);
+      } else {
+        symmetryStrategies[params.symmetryType](nlink, limit);
+      }
     };
 
     configTile();
 
     // Cache the generated pattern so we can redraw without regenerating
-    cachedRef.current = { link, nlink, tnumber, tsize, margin, canvasSize };
+    cachedRef.current = { link, nlink, tnumber, tsize, margin };
 
     // Update the generated parameters to match what was actually generated
     setGeneratedParams({ ...params });
@@ -139,14 +149,33 @@ const KolamGenerator = () => {
         ctx.fillStyle = canvasColor;
         ctx.fillRect(0, 0, canvasSize, canvasSize);
 
+        // Handle recursive pattern specially
+        if (params.symmetryType === 'recursive') {
+          ctx.save();
+          ctx.translate(canvasSize / 2, canvasSize / 2);
+          
+          // Set up drawing context for recursive pattern
+          ctx.strokeStyle = linesColor;
+          ctx.lineWidth = params.lineThickness;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          
+          // Calculate initial size based on grid size and dot spacing
+          const initialSize = Math.min(tsize * tnumber * 0.3, 200);
+          
+          // Draw the recursive pattern using the depth parameter
+          drawRecursiveKolam(ctx, 0, 0, initialSize, params.depth, params.lineThickness, linesColor, dotsColor);
+          
+          ctx.restore();
+        } else {
         // Center the pattern (no rotation like in the 4-way symmetry version)
         ctx.save();
         ctx.translate(canvasSize / 2, canvasSize / 2);
         ctx.translate(-(tsize * tnumber + 2 * margin) / 2, -(tsize * tnumber + 2 * margin) / 2);
 
         // Draw using p5.js drawTile logic
-        ctx.strokeStyle = linesColor;
-        ctx.lineWidth = params.lineThickness;
+          ctx.strokeStyle = linesColor;
+          ctx.lineWidth = params.lineThickness;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
 
@@ -184,6 +213,7 @@ const KolamGenerator = () => {
         }
 
         ctx.restore();
+        }
         idx += 0.02; // Same increment as p5.js
         requestAnimationFrame(animate);
       };
@@ -197,9 +227,14 @@ const KolamGenerator = () => {
     const canvas = canvasRef.current;
     if (!cache || !canvas) return;
 
-    const { link, nlink, tnumber, tsize, margin, canvasSize } = cache;
+    const { link, nlink, tnumber, tsize, margin } = cache;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    // Calculate responsive canvas size based on screen height
+    const screenHeight = window.innerHeight;
+    const availableHeight = screenHeight - 200; // Account for header, footer, and padding
+    const canvasSize = Math.min(700, Math.max(500, availableHeight * 0.7)); // Responsive size between 500-700px
 
     const rootStyle = getComputedStyle(document.documentElement);
     const canvasColor = `hsl(${rootStyle.getPropertyValue('--kolam-canvas').trim()})`;
@@ -212,16 +247,35 @@ const KolamGenerator = () => {
     ctx.fillStyle = canvasColor;
     ctx.fillRect(0, 0, canvasSize, canvasSize);
 
-    ctx.save();
-    ctx.translate(canvasSize / 2, canvasSize / 2);
-    ctx.translate(-(tsize * tnumber + 2 * margin) / 2, -(tsize * tnumber + 2 * margin) / 2);
+    // Handle recursive pattern specially
+    if (params.symmetryType === 'recursive') {
+      ctx.save();
+      ctx.translate(canvasSize / 2, canvasSize / 2);
+      
+      // Set up drawing context for recursive pattern
+      ctx.strokeStyle = linesColor;
+      ctx.lineWidth = params.lineThickness;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      
+      // Calculate initial size based on grid size and dot spacing
+      const initialSize = Math.min(tsize * tnumber * 0.3, 200);
+      
+      // Draw the recursive pattern using the depth parameter
+      drawRecursiveKolam(ctx, 0, 0, initialSize, params.depth, params.lineThickness, linesColor, dotsColor);
+      
+      ctx.restore();
+    } else {
+      ctx.save();
+      ctx.translate(canvasSize / 2, canvasSize / 2);
+      ctx.translate(-(tsize * tnumber + 2 * margin) / 2, -(tsize * tnumber + 2 * margin) / 2);
 
-    ctx.strokeStyle = linesColor;
-    ctx.lineWidth = params.lineThickness;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
+      ctx.strokeStyle = linesColor;
+      ctx.lineWidth = params.lineThickness;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
 
-    const idx = 1; // final state
+      const idx = 1; // final state
     for (let i = 0; i < tnumber; i++) {
       for (let j = 0; j < tnumber; j++) {
         if ((i + j) % 2 === 0) {
@@ -246,7 +300,8 @@ const KolamGenerator = () => {
         }
       }
     }
-    ctx.restore();
+      ctx.restore();
+    }
   };
 
   const downloadKolam = () => {
@@ -289,9 +344,15 @@ const KolamGenerator = () => {
   const renderCachedToCanvas = (targetCanvas: HTMLCanvasElement, scale = 1) => {
     const cache = cachedRef.current;
     if (!cache) return;
-    const { link, nlink, tnumber, tsize, margin, canvasSize } = cache;
+    const { link, nlink, tnumber, tsize, margin } = cache;
     const ctx = targetCanvas.getContext('2d');
     if (!ctx) return;
+    
+    // Calculate responsive canvas size based on screen height
+    const screenHeight = window.innerHeight;
+    const availableHeight = screenHeight - 200; // Account for header, footer, and padding
+    const canvasSize = Math.min(700, Math.max(500, availableHeight * 0.7)); // Responsive size between 500-700px
+    
     const rootStyle = getComputedStyle(document.documentElement);
     const canvasColor = `hsl(${rootStyle.getPropertyValue('--kolam-canvas').trim()})`;
     const linesColor = `hsl(${rootStyle.getPropertyValue('--kolam-lines').trim()})`;
@@ -307,16 +368,35 @@ const KolamGenerator = () => {
     ctx.fillStyle = canvasColor;
     ctx.fillRect(0, 0, scaledSize, scaledSize);
 
-    ctx.save();
-    ctx.translate(scaledSize / 2, scaledSize / 2);
-    ctx.translate(-(tsizeScaled * tnumber + 2 * marginScaled) / 2, -(tsizeScaled * tnumber + 2 * marginScaled) / 2);
+    // Handle recursive pattern specially
+    if (params.symmetryType === 'recursive') {
+      ctx.save();
+      ctx.translate(scaledSize / 2, scaledSize / 2);
+      
+      // Set up drawing context for recursive pattern
+      ctx.strokeStyle = linesColor;
+      ctx.lineWidth = params.lineThickness * scale;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      
+      // Calculate initial size based on grid size and dot spacing
+      const initialSize = Math.min(tsizeScaled * tnumber * 0.3, 200 * scale);
+      
+      // Draw the recursive pattern using the depth parameter
+      drawRecursiveKolam(ctx, 0, 0, initialSize, params.depth, params.lineThickness * scale, linesColor, dotsColor);
+      
+      ctx.restore();
+    } else {
+      ctx.save();
+      ctx.translate(scaledSize / 2, scaledSize / 2);
+      ctx.translate(-(tsizeScaled * tnumber + 2 * marginScaled) / 2, -(tsizeScaled * tnumber + 2 * marginScaled) / 2);
 
-    ctx.strokeStyle = linesColor;
-    ctx.lineWidth = params.lineThickness * scale;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
+      ctx.strokeStyle = linesColor;
+      ctx.lineWidth = params.lineThickness * scale;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
 
-    const idx = 1;
+      const idx = 1;
     const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
     for (let i = 0; i < tnumber; i++) {
       for (let j = 0; j < tnumber; j++) {
@@ -341,7 +421,8 @@ const KolamGenerator = () => {
         }
       }
     }
-    ctx.restore();
+      ctx.restore();
+    }
   };
 
   useEffect(() => {
@@ -380,6 +461,18 @@ const KolamGenerator = () => {
     };
   }, []);
 
+  // Window resize listener for responsive canvas
+  useEffect(() => {
+    const handleResize = () => {
+      if (cachedRef.current) {
+        redrawKolamUsingCache();
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const toggleTheme = () => {
     const next = !isDark;
     setIsDark(next);
@@ -404,7 +497,7 @@ const KolamGenerator = () => {
           </div>
         </div>
       </header>
-      
+
       <div className="flex-1 max-w-7xl mx-auto px-4 py-6 overflow-hidden min-h-0">
         <div className="grid lg:grid-cols-7 gap-8 h-full min-h-0">
           {/* Control Panel */}
@@ -441,7 +534,7 @@ const KolamGenerator = () => {
                       type="button"
                       variant="secondary"
                       size="sm"
-                      onClick={() => setParams(prev => ({ ...prev, gridSize: Math.min(11, prev.gridSize + 2) }))}
+                      onClick={() => setParams(prev => ({ ...prev, gridSize: Math.min(9, prev.gridSize + 2) }))}
                       aria-label="Increase grid size"
                     >
                       +
@@ -507,7 +600,36 @@ const KolamGenerator = () => {
                   <p className="text-xs text-muted-foreground">Choose the geometric principle used to mirror or repeat motifs.</p>
                 </div>
 
-                
+                {/* Depth - Only show for Recursive symmetry */}
+                {params.symmetryType === 'recursive' && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">
+                      Depth: {params.depth}
+                  </label>
+                    <div className="flex items-center gap-3">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setParams(prev => ({ ...prev, depth: Math.max(1, prev.depth - 1) }))}
+                        aria-label="Decrease depth"
+                      >
+                        -
+                      </Button>
+                      <div className="min-w-[3rem] text-center font-medium">{params.depth}</div>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setParams(prev => ({ ...prev, depth: Math.min(4, prev.depth + 1) }))}
+                        aria-label="Increase depth"
+                      >
+                        +
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Controls how many levels of recursion the pattern will have.</p>
+                </div>
+                )}
 
                 {/* Line Thickness */}
                 <div className="space-y-2">
@@ -525,7 +647,7 @@ const KolamGenerator = () => {
                       -
                     </Button>
                     <div className="min-w-[3rem] text-center font-medium">{params.lineThickness}</div>
-                    <Button
+                <Button 
                       type="button"
                       variant="secondary"
                       size="sm"
@@ -533,7 +655,7 @@ const KolamGenerator = () => {
                       aria-label="Increase line thickness"
                     >
                       +
-                    </Button>
+                </Button>
                   </div>
                   <p className="text-xs text-muted-foreground">Adjusts stroke width of lines on the canvas.</p>
                 </div>
@@ -545,19 +667,19 @@ const KolamGenerator = () => {
 
           {/* Canvas Area */}
           <motion.div 
-            className="lg:col-span-3 flex flex-col"
+            className="lg:col-span-3 flex flex-col -mt-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 1 }}
           >
             <Card className="kolam-canvas flex-1 flex flex-col">
-              <CardHeader className="space-y-4 flex-shrink-0">
+              <CardHeader className="space-y-2 flex-shrink-0 pb-2">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-primary section-title">Kolam Canvas</CardTitle>
                   <div className="flex items-center gap-2">
                     <Button onClick={generateKolam} disabled={isGenerating} variant="secondary" className="hidden sm:inline-flex">
                       <Grid3X3 className="w-4 h-4 mr-2" />
-                      Regenerate
+                      {isGenerating ? 'Generating...' : 'Regenerate'}
                     </Button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -573,14 +695,18 @@ const KolamGenerator = () => {
                     </DropdownMenu>
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground">Rendered on an HTML Canvas using symmetry-driven connection rules.</p>
               </CardHeader>
-              <CardContent className="flex flex-col items-center justify-center flex-1">
-                <div className="relative animate-float soft-border">
+              <CardContent className="flex flex-col items-center justify-center flex-1 pt-2">
+                <div className="relative soft-border">
                   <canvas
                     ref={canvasRef}
                     className="border-2 border-border/30 rounded-lg shadow-inner bg-kolam-canvas"
-                    style={{ maxWidth: '100%', height: 'auto', maxHeight: '500px' }}
+                    style={{ 
+                      maxWidth: '100%', 
+                      height: 'auto', 
+                      maxHeight: '70vh',
+                      width: 'auto'
+                    }}
                   />
                   {isGenerating && (
                     <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-lg">
@@ -606,58 +732,58 @@ const KolamGenerator = () => {
               <CardContent className="space-y-4 flex-1 overflow-y-auto">
                 {generatedParams ? (
                   <>
-                    <div className="grid gap-3 text-sm">
-                      <div className="flex justify-between border-b border-border/20 pb-2">
-                        <span className="text-muted-foreground">Grid Size</span>
+                <div className="grid gap-3 text-sm">
+                  <div className="flex justify-between border-b border-border/20 pb-2">
+                    <span className="text-muted-foreground">Grid Size</span>
                         <span className="font-medium">{generatedParams.gridSize}×{generatedParams.gridSize}</span>
-                      </div>
-                      
-                      <div className="flex justify-between border-b border-border/20 pb-2">
-                        <span className="text-muted-foreground">Dot Spacing</span>
+                  </div>
+                  
+                  <div className="flex justify-between border-b border-border/20 pb-2">
+                    <span className="text-muted-foreground">Dot Spacing</span>
                         <span className="font-medium">{generatedParams.dotSpacing}px</span>
-                      </div>
-                      
-                      <div className="flex justify-between border-b border-border/20 pb-2">
-                        <span className="text-muted-foreground">Symmetry</span>
-                        <span className="font-medium capitalize">
+                  </div>
+                  
+                  <div className="flex justify-between border-b border-border/20 pb-2">
+                    <span className="text-muted-foreground">Symmetry</span>
+                    <span className="font-medium capitalize">
                           {generatedParams.symmetryType === '8way' ? '8-Way Rotational' : 
                            generatedParams.symmetryType === '4way' ? '4-Way Mirror' : 
                            generatedParams.symmetryType}
-                        </span>
-                      </div>
-                      
-                      <div className="flex justify-between border-b border-border/20 pb-2">
-                        <span className="text-muted-foreground">Total Dots</span>
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between border-b border-border/20 pb-2">
+                    <span className="text-muted-foreground">Total Dots</span>
                         <span className="font-medium">{(generatedParams.gridSize + 1) * (generatedParams.gridSize + 1)}</span>
-                      </div>
-                      
-                      <div className="flex justify-between border-b border-border/20 pb-2">
-                        <span className="text-muted-foreground">Active Tiles</span>
+                  </div>
+                  
+                  <div className="flex justify-between border-b border-border/20 pb-2">
+                    <span className="text-muted-foreground">Active Tiles</span>
                         <span className="font-medium">{Math.floor((generatedParams.gridSize * generatedParams.gridSize) / 2)}</span>
-                      </div>
-                      
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Cultural Origin</span>
-                        <span className="font-medium">South Indian</span>
-                      </div>
-                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Cultural Origin</span>
+                    <span className="font-medium">South Indian</span>
+                  </div>
+                </div>
 
                     <div className="flex flex-wrap gap-2 pt-2">
                       <Badge variant="secondary">{generatedParams.gridSize} × {generatedParams.gridSize}</Badge>
                       <Badge variant="outline" className="capitalize">{generatedParams.symmetryType}</Badge>
                       <Badge variant="secondary">{generatedParams.dotSpacing}px spacing</Badge>
-                    </div>
+                </div>
 
-                    <div className="mt-6 p-3 bg-muted/30 rounded-lg">
+                <div className="mt-6 p-3 bg-muted/30 rounded-lg">
                       <h4 className="font-medium mb-2 text-primary section-title text-base">About This Pattern</h4>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
                         {generatedParams.symmetryType === '8way' && "This Kolam features traditional 8-way rotational symmetry, creating harmonious patterns that radiate from the center with perfect balance."}
                         {generatedParams.symmetryType === '4way' && "This Kolam uses 4-way mirror symmetry, reflecting horizontally and vertically to create a balanced, cross-like pattern structure."}
                         {generatedParams.symmetryType === 'recursive' && "This recursive Kolam pattern contains self-similar structures at different scales, creating fractal-like beauty within the traditional format."}
                         {generatedParams.symmetryType === 'fractal' && "This fractal Kolam uses mathematical principles to create patterns that repeat at multiple levels, inspired by sacred geometry."}
                         {generatedParams.symmetryType === 'fibonacci' && "This Fibonacci Kolam incorporates the golden ratio and natural spiral patterns, connecting ancient art with mathematical harmony."}
-                      </p>
-                    </div>
+                  </p>
+                </div>
                   </>
                 ) : (
                   <div className="text-center text-muted-foreground py-8">
