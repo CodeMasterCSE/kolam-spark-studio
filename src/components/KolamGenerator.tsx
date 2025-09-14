@@ -160,8 +160,8 @@ const KolamGenerator = () => {
           ctx.lineCap = 'round';
           ctx.lineJoin = 'round';
           
-          // Calculate initial size based on grid size and dot spacing
-          const initialSize = Math.min(tsize * tnumber * 0.3, 200);
+          // Calculate initial size based on canvas dimensions for recursive patterns
+          const initialSize = Math.min(canvasSize * 0.15, 120);
           
           // Draw the recursive pattern using the depth parameter
           drawRecursiveKolam(ctx, 0, 0, initialSize, params.depth, params.lineThickness, linesColor, dotsColor);
@@ -258,8 +258,8 @@ const KolamGenerator = () => {
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       
-      // Calculate initial size based on grid size and dot spacing
-      const initialSize = Math.min(tsize * tnumber * 0.3, 200);
+      // Calculate initial size based on canvas dimensions for recursive patterns
+      const initialSize = Math.min(canvasSize * 0.15, 120);
       
       // Draw the recursive pattern using the depth parameter
       drawRecursiveKolam(ctx, 0, 0, initialSize, params.depth, params.lineThickness, linesColor, dotsColor);
@@ -379,8 +379,8 @@ const KolamGenerator = () => {
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       
-      // Calculate initial size based on grid size and dot spacing
-      const initialSize = Math.min(tsizeScaled * tnumber * 0.3, 200 * scale);
+      // Calculate initial size based on canvas dimensions for recursive patterns
+      const initialSize = Math.min(scaledSize * 0.15, 120 * scale);
       
       // Draw the recursive pattern using the depth parameter
       drawRecursiveKolam(ctx, 0, 0, initialSize, params.depth, params.lineThickness * scale, linesColor, dotsColor);
@@ -486,9 +486,12 @@ const KolamGenerator = () => {
     <div className="h-screen flex flex-col grid-background overflow-hidden">
       <header className="sticky top-0 z-20 backdrop-blur supports-[backdrop-filter]:bg-background/70 border-b flex-shrink-0">
         <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary font-bold">K</span>
-            <span className="font-semibold tracking-tight">Kolamkari</span>
+          <div className="flex items-center gap-0.5 bg-primary px-3 py-1 rounded-lg">
+            <span className="text-3xl font-bold text-background leading-none">K</span>
+            <div className="flex flex-col">
+              <span className="text-sm font-medium tracking-tight leading-none text-background">olam</span>
+              <span className="text-sm font-medium tracking-tight leading-none text-background">ari</span>
+            </div>
           </div>
           <div className="hidden sm:flex items-center gap-3 text-sm text-muted-foreground">
             <Button variant="secondary" size="sm" onClick={toggleTheme} className="ml-2">
@@ -509,68 +512,72 @@ const KolamGenerator = () => {
           >
             <Card className="glass-panel flex-1 flex flex-col min-h-0 overflow-hidden" style={{ maxHeight: '100%' }}>
               <CardHeader className="flex-shrink-0 pb-3">
-                <CardTitle className="section-title">
+                <CardTitle className="section-title text-primary">
                   Pattern Controls
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6 panel-scroll flex-1 overflow-y-auto pr-2 pb-6 min-h-0 max-h-full" style={{ maxHeight: 'calc(100vh - 250px)' }}>
-                {/* Grid Size */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">
-                    Grid Size: {params.gridSize}x{params.gridSize}
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => setParams(prev => ({ ...prev, gridSize: Math.max(5, prev.gridSize - 2) }))}
-                      aria-label="Decrease grid size"
-                    >
-                      -
-                    </Button>
-                    <div className="min-w-[3rem] text-center font-medium">{params.gridSize}</div>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => setParams(prev => ({ ...prev, gridSize: Math.min(9, prev.gridSize + 2) }))}
-                      aria-label="Increase grid size"
-                    >
-                      +
-                    </Button>
+                {/* Grid Size - Hidden for Recursive patterns */}
+                {params.symmetryType !== 'recursive' && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">
+                      Grid Size: {params.gridSize}x{params.gridSize}
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setParams(prev => ({ ...prev, gridSize: Math.max(5, prev.gridSize - 2) }))}
+                        aria-label="Decrease grid size"
+                      >
+                        -
+                      </Button>
+                      <div className="min-w-[3rem] text-center font-medium">{params.gridSize}</div>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setParams(prev => ({ ...prev, gridSize: Math.min(9, prev.gridSize + 2) }))}
+                        aria-label="Increase grid size"
+                      >
+                        +
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Controls the number of tiles drawn across and down.</p>
                   </div>
-                  <p className="text-xs text-muted-foreground">Controls the number of tiles drawn across and down.</p>
-                </div>
+                )}
 
-                {/* Dot Spacing */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">
-                    Dot Spacing: {params.dotSpacing}px
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => setParams(prev => ({ ...prev, dotSpacing: Math.max(20, prev.dotSpacing - 5) }))}
-                      aria-label="Decrease dot spacing"
-                    >
-                      -
-                    </Button>
-                    <div className="min-w-[3rem] text-center font-medium">{params.dotSpacing}</div>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => setParams(prev => ({ ...prev, dotSpacing: Math.min(50, prev.dotSpacing + 5) }))}
-                      aria-label="Increase dot spacing"
-                    >
-                      +
-                    </Button>
+                {/* Dot Spacing - Hidden for Recursive patterns */}
+                {params.symmetryType !== 'recursive' && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">
+                      Dot Spacing: {params.dotSpacing}px
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setParams(prev => ({ ...prev, dotSpacing: Math.max(20, prev.dotSpacing - 5) }))}
+                        aria-label="Decrease dot spacing"
+                      >
+                        -
+                      </Button>
+                      <div className="min-w-[3rem] text-center font-medium">{params.dotSpacing}</div>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setParams(prev => ({ ...prev, dotSpacing: Math.min(50, prev.dotSpacing + 5) }))}
+                        aria-label="Increase dot spacing"
+                      >
+                        +
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Distance between grid points; higher values yield more breathing room.</p>
                   </div>
-                  <p className="text-xs text-muted-foreground">Distance between grid points; higher values yield more breathing room.</p>
-                </div>
+                )}
 
                 {/* Symmetry Type */}
                 <div className="space-y-2">
@@ -727,21 +734,25 @@ const KolamGenerator = () => {
           >
             <Card className="glass-panel flex-1 flex flex-col">
               <CardHeader className="flex-shrink-0">
-                <CardTitle className="section-title">Kolam Characteristics</CardTitle>
+                <CardTitle className="section-title text-primary">Kolam Characteristics</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4 flex-1 overflow-y-auto">
                 {generatedParams ? (
                   <>
                 <div className="grid gap-3 text-sm">
-                  <div className="flex justify-between border-b border-border/20 pb-2">
-                    <span className="text-muted-foreground">Grid Size</span>
-                        <span className="font-medium">{generatedParams.gridSize}×{generatedParams.gridSize}</span>
-                  </div>
-                  
-                  <div className="flex justify-between border-b border-border/20 pb-2">
-                    <span className="text-muted-foreground">Dot Spacing</span>
-                        <span className="font-medium">{generatedParams.dotSpacing}px</span>
-                  </div>
+                  {generatedParams.symmetryType !== 'recursive' && (
+                    <>
+                      <div className="flex justify-between border-b border-border/20 pb-2">
+                        <span className="text-muted-foreground">Grid Size</span>
+                            <span className="font-medium">{generatedParams.gridSize}×{generatedParams.gridSize}</span>
+                      </div>
+                      
+                      <div className="flex justify-between border-b border-border/20 pb-2">
+                        <span className="text-muted-foreground">Dot Spacing</span>
+                            <span className="font-medium">{generatedParams.dotSpacing}px</span>
+                      </div>
+                    </>
+                  )}
                   
                   <div className="flex justify-between border-b border-border/20 pb-2">
                     <span className="text-muted-foreground">Symmetry</span>
@@ -752,15 +763,6 @@ const KolamGenerator = () => {
                     </span>
                   </div>
                   
-                  <div className="flex justify-between border-b border-border/20 pb-2">
-                    <span className="text-muted-foreground">Total Dots</span>
-                        <span className="font-medium">{(generatedParams.gridSize + 1) * (generatedParams.gridSize + 1)}</span>
-                  </div>
-                  
-                  <div className="flex justify-between border-b border-border/20 pb-2">
-                    <span className="text-muted-foreground">Active Tiles</span>
-                        <span className="font-medium">{Math.floor((generatedParams.gridSize * generatedParams.gridSize) / 2)}</span>
-                  </div>
                   
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Cultural Origin</span>
