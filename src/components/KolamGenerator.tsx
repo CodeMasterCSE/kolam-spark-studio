@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { symmetryStrategies, SymmetryType } from '@/lib/symmetry';
 import { drawRecursiveKolam } from '@/lib/symmetry/recursive';
+import { drawFractalKolam } from '@/lib/symmetry/fractal';
 
 interface KolamParams {
   gridSize: number;
@@ -16,6 +17,7 @@ interface KolamParams {
   symmetryType: SymmetryType;
   lineThickness: number;
   depth: number;
+  patternSize: number;
 }
 
 const KolamGenerator = () => {
@@ -34,6 +36,7 @@ const KolamGenerator = () => {
     symmetryType: '8way',
     lineThickness: 3,
     depth: 3,
+    patternSize: 40,
   });
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDark, setIsDark] = useState<boolean>(false);
@@ -167,6 +170,14 @@ const KolamGenerator = () => {
           drawRecursiveKolam(ctx, 0, 0, initialSize, params.depth, params.lineThickness, linesColor, dotsColor);
           
           ctx.restore();
+        } else if (params.symmetryType === 'fractal') {
+          ctx.save();
+          ctx.translate(canvasSize / 2, canvasSize / 2);
+          
+          // Draw the fractal pattern
+          drawFractalKolam(ctx, 0, 0, canvasSize, params.lineThickness, linesColor, dotsColor, params.patternSize);
+          
+          ctx.restore();
         } else {
         // Center the pattern (no rotation like in the 4-way symmetry version)
         ctx.save();
@@ -206,7 +217,8 @@ const KolamGenerator = () => {
               // Draw center point
               ctx.fillStyle = dotsColor;
               ctx.beginPath();
-              ctx.arc(x + tsize / 2, y + tsize / 2, 2, 0, Math.PI * 2);
+              const dotRadius = Math.max(1, tsize * 0.05); // Proportional to tile size
+              ctx.arc(x + tsize / 2, y + tsize / 2, dotRadius, 0, Math.PI * 2);
               ctx.fill();
             }
           }
@@ -265,6 +277,14 @@ const KolamGenerator = () => {
       drawRecursiveKolam(ctx, 0, 0, initialSize, params.depth, params.lineThickness, linesColor, dotsColor);
       
       ctx.restore();
+    } else if (params.symmetryType === 'fractal') {
+      ctx.save();
+      ctx.translate(canvasSize / 2, canvasSize / 2);
+      
+      // Draw the fractal pattern
+      drawFractalKolam(ctx, 0, 0, canvasSize, params.lineThickness, linesColor, dotsColor, params.patternSize);
+      
+      ctx.restore();
     } else {
       ctx.save();
       ctx.translate(canvasSize / 2, canvasSize / 2);
@@ -295,7 +315,8 @@ const KolamGenerator = () => {
           ctx.stroke();
           ctx.fillStyle = dotsColor;
           ctx.beginPath();
-          ctx.arc(x + tsize / 2, y + tsize / 2, 2, 0, Math.PI * 2);
+          const dotRadius = Math.max(1, tsize * 0.05); // Proportional to tile size
+          ctx.arc(x + tsize / 2, y + tsize / 2, dotRadius, 0, Math.PI * 2);
           ctx.fill();
         }
       }
@@ -386,6 +407,14 @@ const KolamGenerator = () => {
       drawRecursiveKolam(ctx, 0, 0, initialSize, params.depth, params.lineThickness * scale, linesColor, dotsColor);
       
       ctx.restore();
+    } else if (params.symmetryType === 'fractal') {
+      ctx.save();
+      ctx.translate(scaledSize / 2, scaledSize / 2);
+      
+      // Draw the fractal pattern
+      drawFractalKolam(ctx, 0, 0, scaledSize, params.lineThickness * scale, linesColor, dotsColor, params.patternSize * scale);
+      
+      ctx.restore();
     } else {
       ctx.save();
       ctx.translate(scaledSize / 2, scaledSize / 2);
@@ -416,7 +445,8 @@ const KolamGenerator = () => {
           ctx.stroke();
           ctx.fillStyle = dotsColor;
           ctx.beginPath();
-          ctx.arc(x + tsizeScaled / 2, y + tsizeScaled / 2, 2 * scale, 0, Math.PI * 2);
+          const dotRadius = Math.max(1, tsizeScaled * 0.05); // Proportional to scaled tile size
+          ctx.arc(x + tsizeScaled / 2, y + tsizeScaled / 2, dotRadius, 0, Math.PI * 2);
           ctx.fill();
         }
       }
@@ -486,11 +516,23 @@ const KolamGenerator = () => {
     <div className="h-screen flex flex-col grid-background overflow-hidden">
       <header className="sticky top-0 z-20 backdrop-blur supports-[backdrop-filter]:bg-background/70 border-b flex-shrink-0">
         <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-0.5 bg-primary px-3 py-1 rounded-lg">
-            <span className="text-3xl font-bold text-background leading-none">K</span>
-            <div className="flex flex-col">
-              <span className="text-sm font-medium tracking-tight leading-none text-background">olam</span>
-              <span className="text-sm font-medium tracking-tight leading-none text-background">ari</span>
+          <div className="flex items-center">
+            <img 
+              src="/kolamkari-logo.png" 
+              alt="KolamKari" 
+              className="h-10 w-auto"
+              onError={(e) => {
+                // Fallback to text logo if image fails to load
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+              }}
+            />
+            <div className="hidden flex items-center gap-0.5 bg-primary px-3 py-1 rounded-lg">
+              <span className="text-3xl font-bold text-background leading-none">K</span>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium tracking-tight leading-none text-background">olam</span>
+                <span className="text-sm font-medium tracking-tight leading-none text-background">ari</span>
+              </div>
             </div>
           </div>
           <div className="hidden sm:flex items-center gap-3 text-sm text-muted-foreground">
@@ -517,12 +559,12 @@ const KolamGenerator = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6 panel-scroll flex-1 overflow-y-auto pr-2 pb-6 min-h-0 max-h-full" style={{ maxHeight: 'calc(100vh - 250px)' }}>
-                {/* Grid Size - Hidden for Recursive patterns */}
-                {params.symmetryType !== 'recursive' && (
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">
-                      Grid Size: {params.gridSize}x{params.gridSize}
-                    </label>
+                {/* Grid Size - Hidden for Recursive and Fractal patterns */}
+                {params.symmetryType !== 'recursive' && params.symmetryType !== 'fractal' && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">
+                    Grid Size: {params.gridSize}x{params.gridSize}
+                  </label>
                     <div className="flex items-center gap-3">
                       <Button
                         type="button"
@@ -545,15 +587,15 @@ const KolamGenerator = () => {
                       </Button>
                     </div>
                     <p className="text-xs text-muted-foreground">Controls the number of tiles drawn across and down.</p>
-                  </div>
+                </div>
                 )}
 
-                {/* Dot Spacing - Hidden for Recursive patterns */}
-                {params.symmetryType !== 'recursive' && (
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">
-                      Dot Spacing: {params.dotSpacing}px
-                    </label>
+                {/* Dot Spacing - Hidden for Recursive and Fractal patterns */}
+                {params.symmetryType !== 'recursive' && params.symmetryType !== 'fractal' && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">
+                    Dot Spacing: {params.dotSpacing}px
+                  </label>
                     <div className="flex items-center gap-3">
                       <Button
                         type="button"
@@ -576,7 +618,7 @@ const KolamGenerator = () => {
                       </Button>
                     </div>
                     <p className="text-xs text-muted-foreground">Distance between grid points; higher values yield more breathing room.</p>
-                  </div>
+                </div>
                 )}
 
                 {/* Symmetry Type */}
@@ -667,6 +709,37 @@ const KolamGenerator = () => {
                   <p className="text-xs text-muted-foreground">Adjusts stroke width of lines on the canvas.</p>
                 </div>
 
+                {/* Pattern Size - Only show for Fractal patterns */}
+                {params.symmetryType === 'fractal' && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">
+                      Pattern Size: {params.patternSize}px
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setParams(prev => ({ ...prev, patternSize: Math.max(20, prev.patternSize - 5) }))}
+                        aria-label="Decrease pattern size"
+                      >
+                        -
+                      </Button>
+                      <div className="min-w-[3rem] text-center font-medium">{params.patternSize}</div>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setParams(prev => ({ ...prev, patternSize: Math.min(80, prev.patternSize + 5) }))}
+                        aria-label="Increase pattern size"
+                      >
+                        +
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Controls the size of individual square patterns in the fractal.</p>
+                  </div>
+                )}
+
                 
               </CardContent>
             </Card>
@@ -740,18 +813,25 @@ const KolamGenerator = () => {
                 {generatedParams ? (
                   <>
                 <div className="grid gap-3 text-sm">
-                  {generatedParams.symmetryType !== 'recursive' && (
+                  {generatedParams.symmetryType !== 'recursive' && generatedParams.symmetryType !== 'fractal' && (
                     <>
-                      <div className="flex justify-between border-b border-border/20 pb-2">
-                        <span className="text-muted-foreground">Grid Size</span>
+                  <div className="flex justify-between border-b border-border/20 pb-2">
+                    <span className="text-muted-foreground">Grid Size</span>
                             <span className="font-medium">{generatedParams.gridSize}×{generatedParams.gridSize}</span>
-                      </div>
-                      
-                      <div className="flex justify-between border-b border-border/20 pb-2">
-                        <span className="text-muted-foreground">Dot Spacing</span>
+                  </div>
+                  
+                  <div className="flex justify-between border-b border-border/20 pb-2">
+                    <span className="text-muted-foreground">Dot Spacing</span>
                             <span className="font-medium">{generatedParams.dotSpacing}px</span>
-                      </div>
+                  </div>
                     </>
+                  )}
+                  
+                  {generatedParams.symmetryType === 'fractal' && (
+                    <div className="flex justify-between border-b border-border/20 pb-2">
+                      <span className="text-muted-foreground">Pattern Size</span>
+                      <span className="font-medium">{generatedParams.patternSize}px</span>
+                    </div>
                   )}
                   
                   <div className="flex justify-between border-b border-border/20 pb-2">
