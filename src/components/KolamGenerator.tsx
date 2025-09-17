@@ -361,6 +361,46 @@ const KolamGenerator = () => {
     }
   };
 
+  const printKolam = () => {
+    const cache = cachedRef.current;
+    if (!cache) return;
+    // Render to an offscreen canvas at device-friendly scale for sharp print
+    const off = document.createElement('canvas');
+    renderCachedToCanvas(off, 2);
+    const imgData = off.toDataURL('image/png');
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title></title>
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body { display: flex; align-items: center; justify-content: center; background: #fff; }
+    img { width: 100vw; height: auto; max-height: 100vh; }
+    @page { size: auto; margin: 0; }
+    @media print {
+      body { margin: 0; }
+      img { width: 100vw; height: auto; }
+    }
+  </style>
+  <script>
+    function doPrint(){
+      setTimeout(function(){ window.print(); setTimeout(function(){ window.close(); }, 250); }, 100);
+    }
+  </script>
+  </head>
+<body onload="doPrint()">
+  <img src="${imgData}" alt="Kolam" />
+</body>
+</html>`;
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+  };
+
   // Render cached pattern to a provided canvas with an optional scale factor for high-res exports
   const renderCachedToCanvas = (targetCanvas: HTMLCanvasElement, scale = 1) => {
     const cache = cachedRef.current;
@@ -643,7 +683,6 @@ const KolamGenerator = () => {
                       <SelectItem value="diagonal">Diagonal</SelectItem>
                       <SelectItem value="recursive">Recursive</SelectItem>
                       <SelectItem value="fractal">Fractal</SelectItem>
-                      <SelectItem value="fibonacci">Fibonacci</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">Choose the geometric principle used to mirror or repeat motifs.</p>
@@ -771,6 +810,7 @@ const KolamGenerator = () => {
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={downloadKolam}>JPEG</DropdownMenuItem>
                         <DropdownMenuItem onClick={downloadAsPDF}>PDF</DropdownMenuItem>
+                        <DropdownMenuItem onClick={printKolam}>Print</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -861,9 +901,11 @@ const KolamGenerator = () => {
                   <p className="text-xs text-muted-foreground leading-relaxed">
                         {generatedParams.symmetryType === '8way' && "This Kolam features traditional 8-way rotational symmetry, creating harmonious patterns that radiate from the center with perfect balance."}
                         {generatedParams.symmetryType === '4way' && "This Kolam uses 4-way mirror symmetry, reflecting horizontally and vertically to create a balanced, cross-like pattern structure."}
+                        {generatedParams.symmetryType === 'vertical' && "This Kolam mirrors motifs across a central vertical axis, producing left-right balanced designs reminiscent of temple doorway patterns."}
+                        {generatedParams.symmetryType === 'horizontal' && "This Kolam reflects shapes across a central horizontal axis, creating top-bottom harmony often seen in courtyard threshold designs."}
+                        {generatedParams.symmetryType === 'diagonal' && "This Kolam reflects elements along a diagonal axis, weaving lattice-like compositions with a dynamic, flowing sense of motion."}
                         {generatedParams.symmetryType === 'recursive' && "This recursive Kolam pattern contains self-similar structures at different scales, creating fractal-like beauty within the traditional format."}
                         {generatedParams.symmetryType === 'fractal' && "This fractal Kolam uses mathematical principles to create patterns that repeat at multiple levels, inspired by sacred geometry."}
-                        {generatedParams.symmetryType === 'fibonacci' && "This Fibonacci Kolam incorporates the golden ratio and natural spiral patterns, connecting ancient art with mathematical harmony."}
                   </p>
                 </div>
                   </>
