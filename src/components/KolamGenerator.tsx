@@ -3,13 +3,14 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, Grid3X3, Sun, Moon } from 'lucide-react';
+import { Download, Grid3X3, Sun, Moon, Brain } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { symmetryStrategies, SymmetryType } from '@/lib/symmetry';
 import { drawRecursiveKolam } from '@/lib/symmetry/recursive';
 import { drawFractalKolam } from '@/lib/symmetry/fractal';
+import AIInterface from './AIInterface';
 
 interface KolamParams {
   gridSize: number;
@@ -41,6 +42,7 @@ const KolamGenerator = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDark, setIsDark] = useState<boolean>(false);
   const [generatedParams, setGeneratedParams] = useState<KolamParams | null>(null);
+  const [showAIInterface, setShowAIInterface] = useState(false);
 
   // (removed) custom color redraw hook
 
@@ -576,6 +578,16 @@ const KolamGenerator = () => {
             </div>
           </div>
           <div className="hidden sm:flex items-center gap-3 text-sm text-muted-foreground">
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              onClick={() => setShowAIInterface(true)}
+              className="flex items-center gap-2"
+              title="AI Kolam Analysis"
+            >
+              <Brain className="w-4 h-4" />
+              <span className="hidden lg:inline">AI Analysis</span>
+            </Button>
             <Button variant="secondary" size="sm" onClick={toggleTheme} className="ml-2">
               {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </Button>
@@ -927,6 +939,11 @@ const KolamGenerator = () => {
           <span>A SIH 2025 Project Demo</span>
         </div>
       </footer>
+      
+      {/* AI Interface Modal */}
+      {showAIInterface && (
+        <AIInterface onClose={() => setShowAIInterface(false)} />
+      )}
     </div>
   );
 };
