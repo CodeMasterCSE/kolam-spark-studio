@@ -1,0 +1,156 @@
+import pygame
+import random
+import math
+import os
+
+# Constants
+TSIZE = 40
+MARGIN = 5
+TNUMBER = 9
+# Match p5.js canvas size exactly
+WINDOW_WIDTH = TSIZE * TNUMBER + 2 * MARGIN
+WINDOW_HEIGHT = TSIZE * TNUMBER + 2 * MARGIN
+
+class TileAnimation:
+    def _init_(self):
+        pygame.init()
+        self.screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+        pygame.display.set_caption("Interactive Tile Pattern")
+        self.clock = pygame.time.Clock()
+        
+        # Initialize variables
+        self.idx = 0
+        self.bgcolor = (50, 50, 50)  # Default color, will be updated in config_tile
+        
+        # Since window matches tile area exactly, render directly to screen
+        # Keep pg for compatibility but make it same size as window
+        self.pg = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
+        
+        # Initialize link arrays
+        self.link = []
+        self.nlink = []
+        for i in range(TNUMBER + 1):
+            self.link.append([1] * (TNUMBER + 1))
+            self.nlink.append([1] * (TNUMBER + 1))
+        
+        self.config_tile()
+        self.running = True
+    
+    def lerp(self, start, end, t):
+        """Linear interpolation function (equivalent to p5.js lerp)"""
+        return start + t * (end - start)
+    
+    def constrain(self, value, min_val, max_val):
+        """Constrain function (equivalent to p5.js constrain)"""
+        return max(min_val, min(max_val, value))
+    
+    def ease_in_out(self, t):
+        """Easing function for smoother animation (ease in-out cubic)"""
+        return 3 * t ** 2 - 2 * t ** 3
+
+    def config_tile(self):
+        """Configure tile pattern (equivalent to p5.js configTile)"""
+        self.idx = 0  # Reset animation progress
+        
+        # Generate new background color each time (like p5.js)
+        self.bgcolor = (random.randint(0, 100), random.randint(0, 100), random.randint(0, 100))
+        
+        # Copy current nlink to link
+        for i in range(len(self.link)):
+            for j in range(len(self.link[0])):
+                self.link[i][j] = self.nlink[i][j]
+        
+        # Generate new pattern with symmetry
+        limit = random.uniform(0.4, 0.7)
+        
+        for i in range(len(self.nlink)):
+            for j in range(i, len(self.nlink[0]) // 2):
+                l = 1 if random.random() > limit else 0
+                
+                # Apply 8-fold symmetry
+                self.nlink[i][j] = l
+                self.nlink[i][len(self.nlink[0]) - j - 1] = l
+                self.nlink[j][i] = l
+                self.nlink[len(self.nlink[0]) - j - 1][i] = l
+                self.nlink[len(self.nlink) - 1 - i][j] = l
+                self.nlink[len(self.nlink) - 1 - i][len(self.nlink[0]) - j - 1] = l
+                self.nlink[j][len(self.nlink) - 1 - i] = l
+                self.nlink[len(self.nlink[0]) - 1 - j][len(self.nlink) - 1 - i] = l
+    
+    def draw_rounded_rect(self, surface, color, rect, top_left_r, top_right_r, bottom_right_r, bottom_left_r, width=5):
+        """Draw a rounded rectangle with individual corner radii using pygame's built-in function"""
+        x, y, w, h = rect
+        
+        # Use pygame's built-in rounded rectangle with individual corner radii
+        pygame.draw.rect(surface, color, (x, y, w, h), width, 
+                        border_top_left_radius=int(top_left_r),
+                        border_top_right_radius=int(top_right_r), 
+                        border_bottom_right_radius=int(bottom_right_r),
+                        border_bottom_left_radius=int(bottom_left_r))
+    
+    def draw_tile(self):
+        """Draw tiles with animation (equivalent to p5.js drawTile), with connected corners."""
+        self.pg.fill(self.bgcolor)
+        t = self.ease_in_out(self.idx)
+
+        # Precompute all interpolated corner values
+        corner = []
+        for i in range(TNUMBER + 1):
+            row = []
+            for j in range(TNUMBER + 1):
+                val = self.lerp(self.link[i][j], self.nlink[i][j], t)
+                row.append((TSIZE / 2) * val)
+            corner.append(row)
+
+        for i in range(TNUMBER):
+            for j in range(TNUMBER):
+                if (i + j) % 2 == 0:
+                    # Use shared corners for adjacent tiles
+                    top_left = corner[i][j]
+                    top_right = corner[i + 1][j]
+                    bottom_right = corner[i + 1][j + 1]
+                    bottom_left = corner[i][j + 1]
+
+                    rect = (i * TSIZE + MARGIN, j * TSIZE + MARGIN, TSIZE, TSIZE)
+                    self.draw_rounded_rect(self.pg, (255, 255, 255), rect,
+                                           top_left, top_right, bottom_right, bottom_left, 5)
+
+                    center_x = i * TSIZE + TSIZE // 2 + MARGIN
+                    center_y = j * TSIZE + TSIZE // 2 + MARGIN
+                    pygame.draw.circle(self.pg, (255, 255, 255), (int(center_x), int(center_y)), 2)
+
+        if self.idx < 1:
+            self.idx = self.constrain(self.idx + 0.025, 0, 1)
+
+    def handle_events(self):
+        """Handle pygame events"""
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                # Mouse pressed - reconfigure tiles
+                self.config_tile()
+    
+    def run(self):
+        """Main game loop"""
+        while self.running:
+            self.handle_events()
+            
+            # Clear screen with background color
+            self.screen.fill(self.bgcolor)
+            
+            # Draw tiles
+            self.draw_tile()
+            
+            # Draw the off-screen surface (now same size as window)
+            self.screen.blit(self.pg, (0, 0))
+            
+            # Update display
+            pygame.display.flip()
+            self.clock.tick(60)  # 60 FPS
+        
+        pygame.quit()
+
+if _name_ == "_main_":
+    app = TileAnimation()
+    app.run()
