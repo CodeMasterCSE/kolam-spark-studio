@@ -88,7 +88,7 @@ const App = () => {
           <ThemeContext.Provider value={{ theme, toggleTheme }}>
             <BrowserRouter>
               <Routes>
-                <Route path="/" element={<Auth />} />
+                <Route path="/" element={session ? <Index /> : <Auth />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
